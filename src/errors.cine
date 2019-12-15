@@ -92,14 +92,6 @@ proc errorCouldNotOpenDirectory(directory)
     print(directory.coordinatesToString(), "Could not open the \042", directory[], "\042 directory.\n")
     exit()
 
-proc errorWhereCineModules()
-    print("The path where the modules are located is not specified. (The environment variable \042CINE_MODULES\042 is responsible for this.)\n")
-    exit()
-
-proc errorWhereCineBinary()
-    print("The path where the binaries are located is not specified. (The environment variable \042CINE_BINARIES\042 is responsible for this.)\n")
-    exit()
-
 proc errorExpectSubBlock(file, line)
     rules
         final = file == [UInt8] & line == UInt64

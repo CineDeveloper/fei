@@ -6,7 +6,7 @@ func version()
 func helpMessage()
     rules
         result = [UInt8]
-    result = "Fei - installer and project builder for programs written in the cine programming language.\n"{
+    result = "Fei - installer and package builder for programs written in the cine programming language.\n"{
         "\tfei new PROJECT_NAME - create a new project in the current directory.\n"
         "\tfei build FILE - build the project according to the instructions specified in the file, if the file is not specified, then use the file \042release.fei\042.\n"
         "\tfei install FILE - Install the program from the file.\n"

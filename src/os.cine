@@ -60,22 +60,12 @@ func getPath(file)
 func getCineModulePath()
     rules
         result = [UInt8]
-    path <.> getEnvironmentVariable("CINE_MODULES")
-    if path.item?()
-        then result = path[]
-        else errorWhereCineModules()
-    if result.getLast() != '/'
-        then result += '/'
+    result = "/opt/cine/modules/"
 
 func getCineBinaryPath()
     rules
         result = [UInt8]
-    path <.> getEnvironmentVariable("CINE_BINARIES")
-    if path.item?()
-        then result = path[]
-        else errorWhereCineBinary()
-    if result.getLast() != '/'
-        then result += '/'
+    result = "/usr/bin/"
 
 func getFilesFromDirectory(directoryName, errorCoordinates)
     include
