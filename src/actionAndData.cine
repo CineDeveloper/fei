@@ -1,0 +1,8 @@
+type ActionAndData
+    action UInt64
+    data [UInt8]
+
+enums
+    a_New
+    a_Build
+    a_Install

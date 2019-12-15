@@ -1,0 +1,39 @@
+func getSources(blocks, feiFileName)
+    rules
+        final = blocks == [Block] & feiFileName == [UInt8]
+        result = [[UInt8]]
+    parse _, block <- blocks
+        block.noSubBlocks!()
+        tokenIndex := 0
+        module .= block.getString(tokenIndex)
+        block.eol!(tokenIndex)
+        mif
+            module.getLength() < 2
+                errorNotExpectedToken(block.line[0], "")
+            module[0] == '-'
+                result += getCineModulePath().join(module.getAllExceptFirst(), "/").getFilesFromDirectory(block.line[0])
+            module.getLast() == '/'
+                result += module.getFilesFromDirectory(block.line[0])
+            default
+                result += feiFileName.getPath() + module
+    if result.getLength() == 0
+        then errorSourcesNotExist()
+
+func getFlags(blocks)
+    rules
+        final = blocks == [Block]
+        result = [Pair([UInt8], Bool)]
+    flagsNames := Set([UInt8])
+    parse _, block <- blocks
+        block.noSubBlocks!()
+        tokenIndex := 0
+        flagName .= block.getFlagName(tokenIndex)
+        if flagsNames[flagName[]]
+            then errorAlreadyExist(flagName, "flag")
+        flagsNames += flagName[]
+        block.next!(tokenIndex, "=")
+        value .= block.next(tokenIndex)
+        block.eol!(tokenIndex)
+        if value[] != "true" && value[] != "false"
+            then errorNotExpectedToken(value, "")
+        result += Pair([UInt8], Bool).create(flagName[], select(value[] == "true", true, false))

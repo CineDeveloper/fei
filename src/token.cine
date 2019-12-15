@@ -1,0 +1,22 @@
+type Token
+    value, file [UInt8]
+    line, row  UInt64
+
+func getItem(token)
+    rules
+        final = token == Token
+        result = [UInt8]
+    result = token.value
+
+func coordinatesToString(token)
+    rules
+        final = token == Token
+        result = [UInt8]
+    result = "File: ".join(token.file, ", line: ", (token.line + 1).toString(), ", row: ", (token.row + 1).toString(), ". ")
+
+func replaceValue(token, value)
+    rules
+        final = token == Token & value == [UInt8]
+        result = Token
+    result = token
+    result:value = value

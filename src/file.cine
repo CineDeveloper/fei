@@ -1,0 +1,81 @@
+func getBlock(file, levelError, expectedLevel, fileName, :lineIndex)
+    rules
+        1 = file == [[UInt8]] & levelError == Bool & expectedLevel == UInt64
+        2 = fileName == [UInt8] & lineIndex == UInt64
+        final = 1 & 2
+        result = Box(Block)
+    lineIndex = file.getFirstNotEmptyLineIndex(fileName, lineIndex)
+    if lineIndex < file.getLength()
+        then
+            line := file[lineIndex]
+            currentLevel := line.getLevel()
+            if currentLevel != expectedLevel
+                then if levelError
+                    then errorWrongLevel(fileName, lineIndex, expectedLevel, currentLevel)
+                else
+                    tokens := line.getAllTokens(fileName, lineIndex, currentLevel)
+                    lineIndex++
+                    if tokens.getLast()[] == "{"
+                        then
+                            tokens = tokens.getAllExceptLast()
+                            for
+                                lineIndex = file.getFirstNotEmptyLineIndex(fileName, lineIndex)
+                                if lineIndex >= file.getLength()
+                                    then errorNotExpectedToken(tokens.getLast(), "}")
+                                line = file[lineIndex]
+                                currentLevel = line.getLevel()
+                                newTokens .= line.getAllTokens(fileName, lineIndex, currentLevel)
+                                if newTokens.getLength() == 1 && newTokens.getLast()[] == "}"
+                                    then
+                                        lineIndex++
+                                        break
+                                    else tokens += newTokens
+                                lineIndex++
+                    leftIndexOfMultiString := 0
+                    rightEdgeOfMultiString := 0
+                    index := 0
+                    for
+                        for ; index + 1 < tokens.getLength(); index++
+                            if tokens[index][][0] == '\042' && tokens[index + 1][][0] == '\042'
+                                then
+                                    leftIndexOfMultiString = index
+                                    for rightEdgeOfMultiString = index + 2; rightEdgeOfMultiString < tokens.getLength(); rightEdgeOfMultiString++
+                                        if tokens[rightEdgeOfMultiString][][0] != '\042'
+                                            then break
+                                    index = rightEdgeOfMultiString
+                                    break
+                        if leftIndexOfMultiString == rightEdgeOfMultiString
+                            then break
+                            else
+                                newItem := tokens[leftIndexOfMultiString]
+                                newItem:value = newItem[].getAllExceptLast()
+                                for stringIndex := leftIndexOfMultiString + 1; stringIndex < rightEdgeOfMultiString; stringIndex++
+                                    newItem:value += tokens[stringIndex][].getAllExceptLast().getAllExceptFirst()
+                                newItem:value += '\042'
+                                leftPart .= tokens.getFirstN(leftIndexOfMultiString)
+                                rightPart .= tokens.getAllExceptFirstN(rightEdgeOfMultiString)
+                                tokens = leftPart + newItem + rightPart
+                                leftIndexOfMultiString = 0
+                                rightEdgeOfMultiString = 0
+                    result = Box(Block).create(Block{line: tokens, subBlocks: file.getSubBlocks(expectedLevel + 1, fileName, lineIndex)})
+
+func getFirstNotEmptyLineIndex(file, fileName, currentLineIndex)
+    rules
+        final = file == [[UInt8]] & fileName == [UInt8] & currentLineIndex == UInt64
+        result = UInt64
+    result = currentLineIndex
+    for result < file.getLength()
+        if line .= file[result]; mutUInt64 := 0; line != "" && getToken(line, fileName, currentLineIndex, mutUInt64).item?()
+            then break
+        result++
+
+func getSubBlocks(file, expectedLevel, fileName, :lineIndex)
+    rules
+        1 = file == [[UInt8]] & expectedLevel == UInt64
+        2 = fileName == [UInt8] & lineIndex == UInt64
+        final = 1 & 2
+        result = [Block]
+    for
+        if block .= file.getBlock(false, expectedLevel, fileName, lineIndex); block.item?()
+            then result += block[]
+            else break

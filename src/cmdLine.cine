@@ -1,0 +1,59 @@
+func version()
+    rules
+        result = [UInt8]
+    result = "0.1"
+
+func helpMessage()
+    rules
+        result = [UInt8]
+    result = "Fei - installer and project builder for programs written in the cine programming language.\n"{
+        "\tfei new PROJECT_NAME - create a new project in the current directory.\n"
+        "\tfei build FILE - build the project according to the instructions specified in the file, if the file is not specified, then use the file \042release.fei\042.\n"
+        "\tfei install FILE - Install the program from the file.\n"
+        "\t-h or --help - show help\n"
+        "\t-v or --version - show version\n"
+    }
+
+func getActionAndData()
+    rules
+        result = ActionAndData
+    arguments .= getCMDArguments()
+    if arguments.getLength() == 0
+        then showMessage(helpMessage())
+        else
+            if arguments.getLength() > 2
+                then errorNotExpectedCMDArg(arguments[2])
+            case arguments[0] of
+                "-v"; "--version"
+                    onlyOne!(arguments[0])
+                    showMessage(version())
+                "-h"; "--help"
+                    onlyOne!(arguments[0])
+                    showMessage(helpMessage())
+                "new"
+                    if arguments.getLength() == 1
+                        then showMessage(helpMessage())
+                    result:action = a_New
+                    result:data = arguments[1]
+                "build"
+                    result:action = a_Build
+                    result:data = select(arguments.getLength() == 1, "release.fei", arguments[1])
+                "install"
+                    if arguments.getLength() == 1
+                        then errorWhatInstall()
+                    result:action = a_Install
+                    result:data = arguments[1]
+                default
+                    errorWrongCMDLineArg(arguments[0])
+
+proc onlyOne!(argument)
+    rules
+        final = argument == [UInt8]
+    if getCMDArgumetsCount() != 1
+        then errorUnnecessaryArgument(argument)
+
+proc showMessage(message)
+    rules
+        final = message == [UInt8]
+    message.printLn()
+    exit()

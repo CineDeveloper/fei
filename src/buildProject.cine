@@ -1,0 +1,129 @@
+proc buildProject(feiFileName)
+    rules
+        final = feiFileName == [UInt8]
+    //(bits 0 -> 4) sources, flags, version, cCompilerOptions, executable
+    alreadyParsed := 0
+    sources := [[UInt8]]
+    flags := [Pair([UInt8], Bool)]
+    version := [UInt8]
+    cCompilerOptions := [UInt8]
+    executable := [UInt8]
+    parse _, block <- feiFileName.loadBlocks()
+        error := false
+        tokenIndex := 0
+        firstToken .= block.next(tokenIndex)
+        case firstToken[] of
+            "sources"
+                if (alreadyParsed & 1) == 1
+                    then
+                        error = true
+                        break
+                alreadyParsed |= 1
+                block.subBlocks!()
+                sources = block.subBlocks.getSources(feiFileName)
+            "flags"
+                if (alreadyParsed & 2) == 2
+                    then
+                        error = true
+                        break
+                alreadyParsed |= 2
+                if block.subBlocks.getLength() != 0
+                    then flags = block.subBlocks.getFlags()
+            "version"
+                if (alreadyParsed & 4) == 4
+                    then
+                        error = true
+                        break
+                alreadyParsed |= 4
+                block.noSubBlocks!()
+                version = block.getVersion()
+                tokenIndex++
+            "cCompilerOptions"
+                if (alreadyParsed & 8) == 8
+                    then
+                        error = true
+                        break
+                alreadyParsed |= 8
+                block.noSubBlocks!()
+                cCompilerOptions = block.getCCompilerOptions()
+                tokenIndex++
+            "executable"
+                if (alreadyParsed & 16) == 16
+                    then
+                        error = true
+                        break
+                alreadyParsed |= 16
+                block.noSubBlocks!()
+                executable = block.getExecutable()
+                tokenIndex++
+            default
+                error = true
+        if error
+            then errorNotExpectedToken(firstToken, "")
+    if alreadyParsed != 31
+        then errorMissedSection(feiFileName)
+    cFile_flagsFile .= sources.compile(executable)
+    buildPackage(cFile_flagsFile.first, cFile_flagsFile.second, flags, version, cCompilerOptions, executable, feiFileName)
+    removeTmpFiles(cFile_flagsFile.first, cFile_flagsFile.second)
+
+func compile(sources, executable)
+    include
+        #include <stdlib.h>
+        #include <stdio.h>
+        #include <stddef.h>
+    rules
+        final = sources == [[UInt8]] & executable == [UInt8]
+        result = Pair([UInt8], [UInt8])
+    tmpDirectory .= "/tmp/" + executable + "/"
+    cFile .= tmpDirectory + executable + ".c"
+    flagsFile .= tmpDirectory + "files"
+    makeDirectory(tmpDirectory)
+    execString := "cine -i"
+    parse _, file <- sources
+        execString:join(" ", file)
+    execString:join(" -o ", cFile, " -f ", flagsFile, "" + UInt8)
+    cFileLength .= cFile.getLength()
+    C
+        system((char*)execString_.items);
+    result = Pair([UInt8], [UInt8]).create(cFile, flagsFile)
+
+proc buildPackage(cFileName, flagsFileName, flags, version, cCompilerOptions, executable, feiFileName)
+    rules
+        1 = cFileName == [UInt8] & flagsFileName == [UInt8] & flags == [Pair([UInt8], Bool)]
+        2 = version == [UInt8] & cCompilerOptions == [UInt8] & executable == [UInt8] & feiFileName == [UInt8]
+        final = 1 & 2
+    package := BinaryData
+    cFileBox .= cFileName.loadFile()
+    flagsFileBox .= flagsFileName.loadFile()
+    if cFileBox.empty?() || flagsFileBox.empty?()
+        then errorSourcesNotCompiled()
+    buffer := ""
+    parse _, flag_ <- flags
+        buffer:join("#define __FLAG_", flag_.first, " ", select(flag_.second, "1", "0"), "\n")
+    buffer += cFileBox[].convertTo([UInt8]).asString()
+    package += buffer
+    buffer = ""
+    flagsFile := flagsFileBox[].convertTo([UInt8]).asString()
+    if flagsFile.getLength() != 0
+        then parse _, line <- flagsFile.split('\n').getAllExceptLast()
+            flagName .= line.getFirstN(line.look(' ')[])
+            parse _, feiFlag <- flags
+                if feiFlag.first == flagName
+                    then continue first
+            buffer:join(line, "\n")
+    package += buffer
+    package += cCompilerOptions
+    package += version
+    package += executable
+    feiPathName .= feiFileName.getPath()
+    feiFileNameWithoutPath .= feiFileName.getAllExceptFirstN(feiPathName.getLength())
+    packageFileName .= feiPathName.join("pkgs/", select(feiFileNameWithoutPath.hasSuffix?(".fei"), feiFileNameWithoutPath.getAllExceptLastN(4), feiFileNameWithoutPath), ".fpkg")
+    if !package.writeToFile(packageFileName)
+        then errorCantWriteToFile(packageFileName)
+
+proc removeTmpFiles(cFile, flagsFile)
+    rules
+        final = cFile == [UInt8] & flagsFile == [UInt8]
+    cFile.deleteFile()
+    flagsFile.deleteFile()
+    cFile.getPath().deleteDirectory()
