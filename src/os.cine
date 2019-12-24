@@ -65,7 +65,7 @@ func getCineModulePath()
 func getCineBinaryPath()
     rules
         result = [UInt8]
-    result = "/usr/bin/"
+    result = "/usr/local/bin/"
 
 func getFilesFromDirectory(directoryName, errorCoordinates)
     include
