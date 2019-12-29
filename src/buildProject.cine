@@ -76,7 +76,7 @@ func compile(sources, executable)
         result = Pair([UInt8], [UInt8])
     tmpDirectory .= "/tmp/" + executable + "/"
     cFile .= tmpDirectory + executable + ".c"
-    flagsFile .= tmpDirectory + "files"
+    flagsFile .= tmpDirectory + "flags"
     makeDirectory(tmpDirectory)
     execString := "cine -i"
     parse _, file <- sources
