@@ -14,7 +14,7 @@ proc buildProject(feiFileName)
         firstToken .= block.next(tokenIndex)
         case firstToken[] of
             "sources"
-                if (alreadyParsed & 1) == 1
+                if < (alreadyParsed & 1) == 1
                     then
                         error = true
                         break
@@ -22,7 +22,7 @@ proc buildProject(feiFileName)
                 block.subBlocks!()
                 sources = block.subBlocks.getSources(feiFileName)
             "flags"
-                if (alreadyParsed & 2) == 2
+                if < (alreadyParsed & 2) == 2
                     then
                         error = true
                         break
@@ -30,7 +30,7 @@ proc buildProject(feiFileName)
                 if block.subBlocks.getLength() != 0
                     then flags = block.subBlocks.getFlags()
             "version"
-                if (alreadyParsed & 4) == 4
+                if < (alreadyParsed & 4) == 4
                     then
                         error = true
                         break
@@ -39,7 +39,7 @@ proc buildProject(feiFileName)
                 version = block.getVersion()
                 tokenIndex++
             "cCompilerOptions"
-                if (alreadyParsed & 8) == 8
+                if < (alreadyParsed & 8) == 8
                     then
                         error = true
                         break
@@ -48,7 +48,7 @@ proc buildProject(feiFileName)
                 cCompilerOptions = block.getCCompilerOptions()
                 tokenIndex++
             "executable"
-                if (alreadyParsed & 16) == 16
+                if < (alreadyParsed & 16) == 16
                     then
                         error = true
                         break
@@ -58,9 +58,9 @@ proc buildProject(feiFileName)
                 tokenIndex++
             default
                 error = true
-        if error
+        if < error
             then errorNotExpectedToken(firstToken, "")
-    if alreadyParsed != 31
+    if < alreadyParsed != 31
         then errorMissedSection(feiFileName)
     cFile_flagsFile .= sources.compile(executable)
     buildPackage(cFile_flagsFile.first, cFile_flagsFile.second, flags, version, cCompilerOptions, executable, feiFileName)
@@ -95,7 +95,7 @@ proc buildPackage(cFileName, flagsFileName, flags, version, cCompilerOptions, ex
     package := BinaryData
     cFileBox .= cFileName.loadFile()
     flagsFileBox .= flagsFileName.loadFile()
-    if cFileBox.empty?() || flagsFileBox.empty?()
+    if < cFileBox.empty?() || flagsFileBox.empty?()
         then errorSourcesNotCompiled()
     buffer := ""
     parse _, flag_ <- flags
@@ -118,7 +118,7 @@ proc buildPackage(cFileName, flagsFileName, flags, version, cCompilerOptions, ex
     feiPathName .= feiFileName.getPath()
     feiFileNameWithoutPath .= feiFileName.getAllExceptFirstN(feiPathName.getLength())
     packageFileName .= feiPathName.join("pkgs/", select(feiFileNameWithoutPath.hasSuffix?(".fei"), feiFileNameWithoutPath.getAllExceptLastN(4), feiFileNameWithoutPath), ".fpkg")
-    if !package.writeToFile(packageFileName)
+    if < !package.writeToFile(packageFileName)
         then errorCantWriteToFile(packageFileName)
 
 proc removeTmpFiles(cFile, flagsFile)

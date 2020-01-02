@@ -2,7 +2,7 @@ proc installPackage(packageFileName)
     rules
         final = packageFileName == [UInt8]
     packageBox .= packageFileName.loadFile()
-    if packageBox.empty?()
+    if < packageBox.empty?()
         then errorCantLoadFile(packageFileName)
     package .= packageBox[]
     position := 0

@@ -3,7 +3,7 @@ func loadBlocks(fileName)
         final = fileName == [UInt8]
         result = [Block]
     file .= fileName.loadFile()
-    if file.empty?()
+    if < file.empty?()
         then errorCantLoadFile(fileName)
     lines .= file[].convertTo([UInt8]).asString().split('\n')
     lineIndex := 0

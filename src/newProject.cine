@@ -1,4 +1,6 @@
 func mainFile()
+    attributes
+        alwaysInline
     rules
         result = [UInt8]
     result = {
@@ -7,6 +9,8 @@ func mainFile()
     }
 
 func releaseFeiFile(projectName)
+    attributes
+        alwaysInline
     rules
         final = projectName == [UInt8]
         result = [UInt8]
@@ -25,6 +29,8 @@ func releaseFeiFile(projectName)
     }
 
 func debugFeiFile(projectName)
+    attributes
+        alwaysInline
     rules
         final = projectName == [UInt8]
         result = [UInt8]

@@ -1,4 +1,6 @@
 proc makeDirectory(directory)
+    attributes
+        noInline
     include
         #include <sys/stat.h>
         #include <string.h>
@@ -15,16 +17,20 @@ proc makeDirectory(directory)
         if (error_){
             error_ = errno != EEXIST;
         }
-    if error
+    if < error
         then errorCantMakeDirectory(directory)
 
 proc makeFile(fileName, fileData)
+    attributes
+        noInline
     rules
         final = fileName == [UInt8] & fileData == [UInt8]
-    if !fileData.convertTo(BinaryData).writeToFile(fileName)
+    if < !fileData.convertTo(BinaryData).writeToFile(fileName)
         then errorCantWriteToFile(fileName)
 
 proc deleteFile(name)
+    attributes
+        noInline
     include
         #include <stdio.h>
         #include <string.h>
@@ -38,6 +44,8 @@ proc deleteFile(name)
         remove(buffer);
 
 proc deleteDirectory(name)
+    attributes
+        noInline
     include
         #include <stdio.h>
         #include <string.h>
@@ -51,6 +59,8 @@ proc deleteDirectory(name)
         remove(buffer);
 
 func getPath(file)
+    attributes
+        alwaysInline
     rules
         final = file == [UInt8]
         result = [UInt8]
@@ -58,16 +68,22 @@ func getPath(file)
         then result = file.getFirstN(lastSeparator[] + 1)
 
 func getCineModulePath()
+    attributes
+        alwaysInline
     rules
         result = [UInt8]
     result = "/opt/cine/modules/"
 
 func getCineBinaryPath()
+    attributes
+        alwaysInline
     rules
         result = [UInt8]
     result = "/usr/local/bin/"
 
 func getFilesFromDirectory(directoryName, errorCoordinates)
+    attributes
+        noInline
     include
         #include <dirent.h>
         #include <string.h>
@@ -82,7 +98,7 @@ func getFilesFromDirectory(directoryName, errorCoordinates)
         zeroEndedDirectoryName[directoryNameLength_] = 0;
         DIR* directory = opendir(zeroEndedDirectoryName);
         error_ = directory == NULL;
-    if error
+    if < error
         then errorCouldNotOpenDirectory(errorCoordinates.replaceValue(directoryName))
     string := ""
     stringLength := 0
@@ -99,11 +115,11 @@ func getFilesFromDirectory(directoryName, errorCoordinates)
     C
         }
         }
-        if (!error_) {
-            closedir(directory);
-        }
+        closedir(directory);
 
 func askTheUser(flagsFile)
+    attributes
+        noInline
     rules
         final = flagsFile == [UInt8]
         result = [UInt8]
@@ -123,14 +139,18 @@ func askTheUser(flagsFile)
                 print("Incorrect value. Try again.\n")
 
 func saveToTmpFile(file, executable)
+    attributes
+        noInline
     rules
         final = file == [UInt8] & executable == [UInt8]
         result = [UInt8]
     result = "/tmp/".join(executable, ".c")
-    if !file.convertTo(BinaryData).writeToFile(result)
+    if < !file.convertTo(BinaryData).writeToFile(result)
         then errorCantWriteToFile(result)
 
 proc compileCFile(cFileName, cCompilerOptions, executable)
+    attributes
+        noInline
     include
         #include <stdlib.h>
         #include <stdio.h>
@@ -146,5 +166,5 @@ proc compileCFile(cFileName, cCompilerOptions, executable)
         if (!error_){
             fclose(file);
         }
-    if error
+    if < error
         then errorExecutableNotExist(executableFullName.getAllExceptLast())

@@ -1,50 +1,68 @@
 proc errorNotExpectedCMDArg(argument)
+    attributes
+        noInline
     rules
         final = argument == [UInt8]
     print("\042", argument, " is an unexpected command line argument.\n")
     exit()
 
 proc errorWhatInstall()
+    attributes
+        noInline
     print("What needs to be installed?\n")
     exit()
 
 proc errorWrongCMDLineArg(argument)
+    attributes
+        noInline
     rules
         final = argument == [UInt8]
     print("\042", argument, "\042 is an unknown command-line argument.\n")
     exit()
 
 proc errorUnnecessaryArgument(argument)
+    attributes
+        noInline
     rules
         final = argument == [UInt8]
     print("The argument \042", argument, "\042 must be specified without any other arguments.\n")
     exit()
 
 proc errorCantMakeDirectory(directory)
+    attributes
+        noInline
     rules
         final = directory == [UInt8]
     print("Error creating directory \042", directory, "\042.\n")
     exit()
 
 proc errorWrongDirectoryName(directory)
+    attributes
+        noInline
     rules
         final = directory == [UInt8]
     print("\042", directory, " is an invalid directory name.\n")
     exit()
 
 proc errorCantWriteToFile(file)
+    attributes
+        noInline
     rules
         final = file == [UInt8]
     print("It is not possible to write to the file \042", file, "\042.\n")
     exit()
 
 proc errorCantLoadFile(file)
+    attributes
+        noInline
     rules
         final = file == [UInt8]
     print("It is not possible to read the file \042", file, "\042.\n")
     exit()
 
 proc errorNotExpectedToken(have, expected)
+    attributes
+        noInline
     rules
         final = have == Token & expected == [UInt8]
     print(have.coordinatesToString())
@@ -54,16 +72,22 @@ proc errorNotExpectedToken(have, expected)
     exit()
 
 proc errorMissedSection(fileName)
+    attributes
+        noInline
     rules
         final = fileName == [UInt8]
     print("One of the sections (sources, flags, version, cCompilerOptions, executable) is missing.\n")
     exit()
 
 proc errorSourcesNotCompiled()
+    attributes
+        noInline
     print("The source code is not compiled.\n")
     exit()
 
 proc errorNotExpectedEOL(lastToken, expected)
+    attributes
+        noInline
     rules
         final = lastToken == Token & expected == [UInt8]
     lastPartOfMessage .= select(expected == "", "Unexpected end of line.\n", " \042" + expected + "\042 was expected but the end of the line was found.\n")
@@ -73,44 +97,60 @@ proc errorNotExpectedEOL(lastToken, expected)
     exit()
 
 proc errorAlreadyExist(name, whatExist)
+    attributes
+        noInline
     rules
         final = name == Token & whatExist == [UInt8]
     print(name.coordinatesToString(), "The ", whatExist, " \042", name[], "\042 already exists.\n")
     exit()
 
 proc errorWrongName(name, nameOwner)
+    attributes
+        noInline
     rules
         final = name == Token & nameOwner == [UInt8]
     print(name.coordinatesToString(), "Wrong ", nameOwner, " name. (", name[], ")\n")
     exit()
 
 proc errorSourcesNotExist()
+    attributes
+        noInline
     print("No source files found.\n")
     exit()
 
 proc errorCouldNotOpenDirectory(directory)
+    attributes
+        noInline
     print(directory.coordinatesToString(), "Could not open the \042", directory[], "\042 directory.\n")
     exit()
 
 proc errorExpectSubBlock(file, line)
+    attributes
+        noInline
     rules
         final = file == [UInt8] & line == UInt64
     print("File: \042", file, "\042, line: ", line, ". A sub block was expected.\n")
     exit()
 
 proc errorWrongLevel(file, line, expectedLevel, haveLevel)
+    attributes
+        noInline
     rules
         final = file == [UInt8] & line == UInt64 & expectedLevel == UInt64 & haveLevel == UInt64
     print("File: \042", file, "\042, line: ", line, ". Wrong level. (expected - ", expectedLevel, ", have - ", haveLevel, ")\n")
     exit()
 
 proc errorTabNotAllowed(file, line, row)
+    attributes
+        noInline
     rules
         final = file == [UInt8] & line == UInt64 & row == UInt64
     print("File: \042", file, "\042, line: ", line, ", row: ", row, ". The tab character is not allowed to format text.\n")
     exit()
 
 proc errorExecutableNotExist(executableFileName)
+    attributes
+        noInline
     rules
         final = executableFileName == [UInt8]
     print("After compilation, an executable file was not found.(", executableFileName, ")")

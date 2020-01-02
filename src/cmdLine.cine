@@ -1,9 +1,13 @@
 func version()
+    attributes
+        alwaysInline
     rules
         result = [UInt8]
     result = "0.1"
 
 func helpMessage()
+    attributes
+        alwaysInline
     rules
         result = [UInt8]
     result = "Fei - installer and package builder for programs written in the cine programming language.\n"{
@@ -21,7 +25,7 @@ func getActionAndData()
     if arguments.getLength() == 0
         then showMessage(helpMessage())
         else
-            if arguments.getLength() > 2
+            if < arguments.getLength() > 2
                 then errorNotExpectedCMDArg(arguments[2])
             case arguments[0] of
                 "-v"; "--version"
@@ -39,7 +43,7 @@ func getActionAndData()
                     result:action = a_Build
                     result:data = select(arguments.getLength() == 1, "release.fei", arguments[1])
                 "install"
-                    if arguments.getLength() == 1
+                    if < arguments.getLength() == 1
                         then errorWhatInstall()
                     result:action = a_Install
                     result:data = arguments[1]
@@ -47,12 +51,16 @@ func getActionAndData()
                     errorWrongCMDLineArg(arguments[0])
 
 proc onlyOne!(argument)
+    attributes
+        alwaysInline
     rules
         final = argument == [UInt8]
-    if getCMDArgumetsCount() != 1
+    if < getCMDArgumetsCount() != 1
         then errorUnnecessaryArgument(argument)
 
 proc showMessage(message)
+    attributes
+        noInline
     rules
         final = message == [UInt8]
     message.printLn()

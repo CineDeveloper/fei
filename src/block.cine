@@ -3,23 +3,29 @@ type Block
     subBlocks [Block]
 
 func next(block, :tokenIndex)
+    attributes
+        alwaysInline
     rules
         final = block == Block & tokenIndex == UInt64
         result = Token
-    if tokenIndex >= block.line.getLength()
+    if < tokenIndex >= block.line.getLength()
         then errorNotExpectedEOL(block.line.getLast(), "")
     result = block.line[tokenIndex]
     tokenIndex++
 
 proc next!(block, :tokenIndex, variant)
+    attributes
+        alwaysInline
     rules
         final = block == Block & tokenIndex == UInt64 & variant == [UInt8]
-    if !block.next?(tokenIndex, variant)
+    if < !block.next?(tokenIndex, variant)
         then if tokenIndex < block.line.getLength()
             then errorNotExpectedToken(block.line[tokenIndex], variant)
             else errorNotExpectedEOL(block.line.getLast(), variant)
 
 func next?(block, :tokenIndex, variant)
+    attributes
+        alwaysInline
     rules
         final = block == Block & tokenIndex == UInt64 & variant == [UInt8]
         result = Bool
@@ -30,26 +36,34 @@ func next?(block, :tokenIndex, variant)
                 tokenIndex++
 
 proc subBlocks!(block)
+    attributes
+        alwaysInline
     rules
         final = block == Block
-    if block.subBlocks.getLength() == 0
+    if < block.subBlocks.getLength() == 0
         then
             token .= block.line[0]
             errorExpectSubBlock(token.file, token.line + 1)
 
 proc noSubBlocks!(block)
+    attributes
+        alwaysInline
     rules
         final = block == Block
-    if block.subBlocks.getLength() != 0
+    if < block.subBlocks.getLength() != 0
         then errorNotExpectedToken(block.subBlocks[0].line[0], "")
 
 proc eol!(block, tokenIndex)
+    attributes
+        alwaysInline
     rules
         final = block == Block & tokenIndex == UInt64
-    if tokenIndex < block.line.getLength()
+    if < tokenIndex < block.line.getLength()
         then errorNotExpectedToken(block.line.getLast(), "")
 
 func getVersion(block)
+    attributes
+        alwaysInline
     rules
         final = block == Block
         result = [UInt8]
@@ -59,6 +73,8 @@ func getVersion(block)
     block.eol!(tokenIndex)
 
 func getCCompilerOptions(block)
+    attributes
+        alwaysInline
     rules
         final = block == Block
         result = [UInt8]
@@ -68,6 +84,8 @@ func getCCompilerOptions(block)
     block.eol!(tokenIndex)
 
 func getExecutable(block)
+    attributes
+        alwaysInline
     rules
         final = block == Block
         result = [UInt8]
@@ -77,26 +95,30 @@ func getExecutable(block)
     block.eol!(tokenIndex)
 
 func getString(block, :tokenIndex)
+    attributes
+        alwaysInline
     rules
         final = block == Block & tokenIndex == UInt64
         result = [UInt8]
     token .= block.next(tokenIndex)
-    if token[][0] != '\042'
+    if < token[][0] != '\042'
         then errorNotExpectedToken(token, "")
     result = token[].getAllExceptFirst().getAllExceptLast()
 
 func getFlagName(block, :tokenIndex)
+    attributes
+        alwaysInline
     rules
         final = block == Block & tokenIndex == UInt64
         result = Token
     result = block.next(tokenIndex)
     nameCorrect := result[][0].lower?()
-    if nameCorrect
+    if > nameCorrect
         then
             parse _, char <- result[].getAllExceptFirst()
                 nameCorrect = nameCorrect && (char.letter?() || char.digit?() || char == '_')
             nameCorrect = nameCorrect && !result[].contain?("__")
-    if nameCorrect
-        then nameCorrect = !result[].hasPrefix?("builtIn")
-    if !nameCorrect
+            if > nameCorrect
+                then nameCorrect = !result[].hasPrefix?("builtIn")
+    if < !nameCorrect
         then errorWrongName(result, "flag")

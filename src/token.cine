@@ -3,6 +3,8 @@ type Token
     line, row  UInt64
 
 func getItem(token)
+    attributes
+        alwaysInline
     rules
         final = token == Token
         result = [UInt8]
