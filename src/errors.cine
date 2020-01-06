@@ -1,8 +1,6 @@
-proc errorNotExpectedCMDArg(argument)
+proc errorNotExpectedCMDArg(argument [UInt8])
     attributes
         noInline
-    rules
-        final = argument == [UInt8]
     print("\042", argument, " is an unexpected command line argument.\n")
     exit()
 
@@ -12,70 +10,54 @@ proc errorWhatInstall()
     print("What needs to be installed?\n")
     exit()
 
-proc errorWrongCMDLineArg(argument)
+proc errorWrongCMDLineArg(argument [UInt8])
     attributes
         noInline
-    rules
-        final = argument == [UInt8]
     print("\042", argument, "\042 is an unknown command-line argument.\n")
     exit()
 
-proc errorUnnecessaryArgument(argument)
+proc errorUnnecessaryArgument(argument [UInt8])
     attributes
         noInline
-    rules
-        final = argument == [UInt8]
     print("The argument \042", argument, "\042 must be specified without any other arguments.\n")
     exit()
 
-proc errorCantMakeDirectory(directory)
+proc errorCantMakeDirectory(directory [UInt8])
     attributes
         noInline
-    rules
-        final = directory == [UInt8]
     print("Error creating directory \042", directory, "\042.\n")
     exit()
 
-proc errorWrongDirectoryName(directory)
+proc errorWrongDirectoryName(directory [UInt8])
     attributes
         noInline
-    rules
-        final = directory == [UInt8]
     print("\042", directory, " is an invalid directory name.\n")
     exit()
 
-proc errorCantWriteToFile(file)
+proc errorCantWriteToFile(file [UInt8])
     attributes
         noInline
-    rules
-        final = file == [UInt8]
     print("It is not possible to write to the file \042", file, "\042.\n")
     exit()
 
-proc errorCantLoadFile(file)
+proc errorCantLoadFile(file [UInt8])
     attributes
         noInline
-    rules
-        final = file == [UInt8]
     print("It is not possible to read the file \042", file, "\042.\n")
     exit()
 
-proc errorNotExpectedToken(have, expected)
+proc errorNotExpectedToken(have Token, expected [UInt8])
     attributes
         noInline
-    rules
-        final = have == Token & expected == [UInt8]
     print(have.coordinatesToString())
     if expected == ""
         then print("\042", have[], "\042 not expected.\n")
         else print("Expected \042", expected, "\042 but there is the \042", have[], "\042.\n")
     exit()
 
-proc errorMissedSection(fileName)
+proc errorMissedSection(fileName [UInt8])
     attributes
         noInline
-    rules
-        final = fileName == [UInt8]
     print("One of the sections (sources, flags, version, cCompilerOptions, executable) is missing.\n")
     exit()
 
@@ -85,30 +67,24 @@ proc errorSourcesNotCompiled()
     print("The source code is not compiled.\n")
     exit()
 
-proc errorNotExpectedEOL(lastToken, expected)
+proc errorNotExpectedEOL(lastToken Token, expected [UInt8])
     attributes
         noInline
-    rules
-        final = lastToken == Token & expected == [UInt8]
     lastPartOfMessage .= select(expected == "", "Unexpected end of line.\n", " \042" + expected + "\042 was expected but the end of the line was found.\n")
     unexistedToken := lastToken
     unexistedToken:row += unexistedToken[].getLength()
     print(unexistedToken.coordinatesToString(), lastPartOfMessage)
     exit()
 
-proc errorAlreadyExist(name, whatExist)
+proc errorAlreadyExist(name Token, whatExist [UInt8])
     attributes
         noInline
-    rules
-        final = name == Token & whatExist == [UInt8]
     print(name.coordinatesToString(), "The ", whatExist, " \042", name[], "\042 already exists.\n")
     exit()
 
-proc errorWrongName(name, nameOwner)
+proc errorWrongName(name Token, nameOwner [UInt8])
     attributes
         noInline
-    rules
-        final = name == Token & nameOwner == [UInt8]
     print(name.coordinatesToString(), "Wrong ", nameOwner, " name. (", name[], ")\n")
     exit()
 
@@ -118,40 +94,32 @@ proc errorSourcesNotExist()
     print("No source files found.\n")
     exit()
 
-proc errorCouldNotOpenDirectory(directory)
+proc errorCouldNotOpenDirectory(directory Token)
     attributes
         noInline
     print(directory.coordinatesToString(), "Could not open the \042", directory[], "\042 directory.\n")
     exit()
 
-proc errorExpectSubBlock(file, line)
+proc errorExpectSubBlock(file [UInt8], line UInt64)
     attributes
         noInline
-    rules
-        final = file == [UInt8] & line == UInt64
     print("File: \042", file, "\042, line: ", line, ". A sub block was expected.\n")
     exit()
 
-proc errorWrongLevel(file, line, expectedLevel, haveLevel)
+proc errorWrongLevel(file [UInt8], line UInt64, expectedLevel UInt64, haveLevel UInt64)
     attributes
         noInline
-    rules
-        final = file == [UInt8] & line == UInt64 & expectedLevel == UInt64 & haveLevel == UInt64
     print("File: \042", file, "\042, line: ", line, ". Wrong level. (expected - ", expectedLevel, ", have - ", haveLevel, ")\n")
     exit()
 
-proc errorTabNotAllowed(file, line, row)
+proc errorTabNotAllowed(file [UInt8], line UInt64, row UInt64)
     attributes
         noInline
-    rules
-        final = file == [UInt8] & line == UInt64 & row == UInt64
     print("File: \042", file, "\042, line: ", line, ", row: ", row, ". The tab character is not allowed to format text.\n")
     exit()
 
-proc errorExecutableNotExist(executableFileName)
+proc errorExecutableNotExist(executableFileName [UInt8])
     attributes
         noInline
-    rules
-        final = executableFileName == [UInt8]
     print("After compilation, an executable file was not found.(", executableFileName, ")")
     exit()

@@ -1,15 +1,11 @@
-func version()
+func version() [UInt8]
     attributes
         alwaysInline
-    rules
-        result = [UInt8]
     result = "0.1"
 
-func helpMessage()
+func helpMessage() [UInt8]
     attributes
         alwaysInline
-    rules
-        result = [UInt8]
     result = "Fei - installer and package builder for programs written in the cine programming language.\n"{
         "\tfei new PROJECT_NAME - create a new project in the current directory.\n"
         "\tfei build FILE - build the project according to the instructions specified in the file, if the file is not specified, then use the file \042release.fei\042.\n"
@@ -18,9 +14,7 @@ func helpMessage()
         "\t-v or --version - show version\n"
     }
 
-func getActionAndData()
-    rules
-        result = ActionAndData
+func getActionAndData() ActionAndData
     arguments .= getCMDArguments()
     if arguments.getLength() == 0
         then showMessage(helpMessage())
@@ -50,18 +44,14 @@ func getActionAndData()
                 default
                     errorWrongCMDLineArg(arguments[0])
 
-proc onlyOne!(argument)
+proc onlyOne!(argument [UInt8])
     attributes
         alwaysInline
-    rules
-        final = argument == [UInt8]
     if < getCMDArgumetsCount() != 1
         then errorUnnecessaryArgument(argument)
 
-proc showMessage(message)
+proc showMessage(message [UInt8])
     attributes
         noInline
-    rules
-        final = message == [UInt8]
     message.printLn()
     exit()

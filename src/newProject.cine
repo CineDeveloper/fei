@@ -1,19 +1,14 @@
-func mainFile()
+func mainFile() [UInt8]
     attributes
         alwaysInline
-    rules
-        result = [UInt8]
     result = {
         "proc main()\n"
         "    print(\042Hello world!\\n\042)\n"
     }
 
-func releaseFeiFile(projectName)
+func releaseFeiFile(projectName [UInt8]) [UInt8]
     attributes
         alwaysInline
-    rules
-        final = projectName == [UInt8]
-        result = [UInt8]
     result = {
         "sources\n"
         "    \042-standart\042\n"
@@ -28,12 +23,9 @@ func releaseFeiFile(projectName)
         "\042\n")
     }
 
-func debugFeiFile(projectName)
+func debugFeiFile(projectName [UInt8]) [UInt8]
     attributes
         alwaysInline
-    rules
-        final = projectName == [UInt8]
-        result = [UInt8]
     result = {
         "sources\n"
         "    \042-standart\042\n"
@@ -49,9 +41,7 @@ func debugFeiFile(projectName)
         "\042\n")
     }
 
-proc createNewProject(projectName)
-    rules
-        final = projectName == [UInt8]
+proc createNewProject(projectName [UInt8])
     makeDirectory("./src")
     makeDirectory("./pkgs")
     makeFile("./main.cine", mainFile())

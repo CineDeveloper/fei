@@ -1,6 +1,4 @@
-proc buildProject(feiFileName)
-    rules
-        final = feiFileName == [UInt8]
+proc buildProject(feiFileName [UInt8])
     //(bits 0 -> 4) sources, flags, version, cCompilerOptions, executable
     alreadyParsed := 0
     sources := [[UInt8]]
@@ -66,14 +64,11 @@ proc buildProject(feiFileName)
     buildPackage(cFile_flagsFile.first, cFile_flagsFile.second, flags, version, cCompilerOptions, executable, feiFileName)
     removeTmpFiles(cFile_flagsFile.first, cFile_flagsFile.second)
 
-func compile(sources, executable)
+func compile(sources [[UInt8]], executable [UInt8]) Pair([UInt8], [UInt8])
     include
         #include <stdlib.h>
         #include <stdio.h>
         #include <stddef.h>
-    rules
-        final = sources == [[UInt8]] & executable == [UInt8]
-        result = Pair([UInt8], [UInt8])
     tmpDirectory .= "/tmp/" + executable + "/"
     cFile .= tmpDirectory + executable + ".c"
     flagsFile .= tmpDirectory + "flags"
@@ -87,11 +82,7 @@ func compile(sources, executable)
         system((char*)execString_.items);
     result = Pair([UInt8], [UInt8]).create(cFile, flagsFile)
 
-proc buildPackage(cFileName, flagsFileName, flags, version, cCompilerOptions, executable, feiFileName)
-    rules
-        1 = cFileName == [UInt8] & flagsFileName == [UInt8] & flags == [Pair([UInt8], Bool)]
-        2 = version == [UInt8] & cCompilerOptions == [UInt8] & executable == [UInt8] & feiFileName == [UInt8]
-        final = 1 & 2
+proc buildPackage(cFileName [UInt8], flagsFileName [UInt8], flags [Pair([UInt8], Bool)], version [UInt8], cCompilerOptions [UInt8], executable [UInt8], feiFileName [UInt8])
     package := BinaryData
     cFileBox .= cFileName.loadFile()
     flagsFileBox .= flagsFileName.loadFile()
@@ -121,7 +112,7 @@ proc buildPackage(cFileName, flagsFileName, flags, version, cCompilerOptions, ex
     if < !package.writeToFile(packageFileName)
         then errorCantWriteToFile(packageFileName)
 
-proc removeTmpFiles(cFile, flagsFile)
+proc removeTmpFiles(cFile [UInt8], flagsFile [UInt8])
     rules
         final = cFile == [UInt8] & flagsFile == [UInt8]
     cFile.deleteFile()

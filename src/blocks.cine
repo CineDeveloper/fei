@@ -1,7 +1,4 @@
-func getSources(blocks, feiFileName)
-    rules
-        final = blocks == [Block] & feiFileName == [UInt8]
-        result = [[UInt8]]
+func getSources(blocks [Block], feiFileName [UInt8]) [[UInt8]]
     parse _, block <- blocks
         block.noSubBlocks!()
         tokenIndex := 0
@@ -19,10 +16,7 @@ func getSources(blocks, feiFileName)
     if < result.getLength() == 0
         then errorSourcesNotExist()
 
-func getFlags(blocks)
-    rules
-        final = blocks == [Block]
-        result = [Pair([UInt8], Bool)]
+func getFlags(blocks [Block]) [Pair([UInt8], Bool)]
     flagsNames := Set([UInt8])
     parse _, block <- blocks
         block.noSubBlocks!()

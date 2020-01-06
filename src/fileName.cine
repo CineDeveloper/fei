@@ -1,7 +1,4 @@
-func loadBlocks(fileName)
-    rules
-        final = fileName == [UInt8]
-        result = [Block]
+func loadBlocks(fileName [UInt8]) [Block]
     file .= fileName.loadFile()
     if < file.empty?()
         then errorCantLoadFile(fileName)

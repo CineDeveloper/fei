@@ -1,6 +1,4 @@
-proc installPackage(packageFileName)
-    rules
-        final = packageFileName == [UInt8]
+proc installPackage(packageFileName [UInt8])
     packageBox .= packageFileName.loadFile()
     if < packageBox.empty?()
         then errorCantLoadFile(packageFileName)

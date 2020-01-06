@@ -1,9 +1,4 @@
-func getBlock(file, levelError, expectedLevel, fileName, :lineIndex)
-    rules
-        1 = file == [[UInt8]] & levelError == Bool & expectedLevel == UInt64
-        2 = fileName == [UInt8] & lineIndex == UInt64
-        final = 1 & 2
-        result = Box(Block)
+func getBlock(file [[UInt8]], levelError Bool, expectedLevel UInt64, fileName [UInt8], :lineIndex UInt64) Box(Block)
     lineIndex = file.getFirstNotEmptyLineIndex(fileName, lineIndex)
     if lineIndex < file.getLength()
         then
@@ -59,22 +54,14 @@ func getBlock(file, levelError, expectedLevel, fileName, :lineIndex)
                                 rightEdgeOfMultiString = 0
                     result = Box(Block).create(Block{line: tokens, subBlocks: file.getSubBlocks(expectedLevel + 1, fileName, lineIndex)})
 
-func getFirstNotEmptyLineIndex(file, fileName, currentLineIndex)
-    rules
-        final = file == [[UInt8]] & fileName == [UInt8] & currentLineIndex == UInt64
-        result = UInt64
+func getFirstNotEmptyLineIndex(file [[UInt8]], fileName [UInt8], currentLineIndex UInt64) UInt64
     result = currentLineIndex
     for result < file.getLength()
         if line .= file[result]; mutUInt64 := 0; line != "" && getToken(line, fileName, currentLineIndex, mutUInt64).item?()
             then break
         result++
 
-func getSubBlocks(file, expectedLevel, fileName, :lineIndex)
-    rules
-        1 = file == [[UInt8]] & expectedLevel == UInt64
-        2 = fileName == [UInt8] & lineIndex == UInt64
-        final = 1 & 2
-        result = [Block]
+func getSubBlocks(file [[UInt8]], expectedLevel UInt64, fileName [UInt8], :lineIndex UInt64) [Block]
     for
         if block .= file.getBlock(false, expectedLevel, fileName, lineIndex); block.item?()
             then result += block[]

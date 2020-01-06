@@ -1,12 +1,10 @@
-proc makeDirectory(directory)
+proc makeDirectory(directory [UInt8])
     attributes
         noInline
     include
         #include <sys/stat.h>
         #include <string.h>
         #include <errno.h>
-    rules
-        final = directory == [UInt8]
     directoryNameLength .= directory.getLength()
     error := false
     C
@@ -20,22 +18,18 @@ proc makeDirectory(directory)
     if < error
         then errorCantMakeDirectory(directory)
 
-proc makeFile(fileName, fileData)
+proc makeFile(fileName [UInt8], fileData [UInt8])
     attributes
         noInline
-    rules
-        final = fileName == [UInt8] & fileData == [UInt8]
     if < !fileData.convertTo(BinaryData).writeToFile(fileName)
         then errorCantWriteToFile(fileName)
 
-proc deleteFile(name)
+proc deleteFile(name [UInt8])
     attributes
         noInline
     include
         #include <stdio.h>
         #include <string.h>
-    rules
-        final = name == [UInt8]
     length .= name.getLength()
     C
         char buffer[length_ + 1];
@@ -43,14 +37,12 @@ proc deleteFile(name)
         buffer[length_] = 0;
         remove(buffer);
 
-proc deleteDirectory(name)
+proc deleteDirectory(name [UInt8])
     attributes
         noInline
     include
         #include <stdio.h>
         #include <string.h>
-    rules
-        final = name == [UInt8]
     length .= name.getLength()
     C
         char buffer[length_ + 1];
@@ -58,38 +50,28 @@ proc deleteDirectory(name)
         buffer[length_] = 0;
         remove(buffer);
 
-func getPath(file)
+func getPath(file [UInt8]) [UInt8]
     attributes
         alwaysInline
-    rules
-        final = file == [UInt8]
-        result = [UInt8]
     if lastSeparator .= file.lookLast('/'); lastSeparator.item?()
         then result = file.getFirstN(lastSeparator[] + 1)
 
-func getCineModulePath()
+func getCineModulePath() [UInt8]
     attributes
         alwaysInline
-    rules
-        result = [UInt8]
     result = "/opt/cine/modules/"
 
-func getCineBinaryPath()
+func getCineBinaryPath() [UInt8]
     attributes
         alwaysInline
-    rules
-        result = [UInt8]
     result = "/usr/local/bin/"
 
-func getFilesFromDirectory(directoryName, errorCoordinates)
+func getFilesFromDirectory(directoryName [UInt8], errorCoordinates Token)  [[UInt8]]
     attributes
         noInline
     include
         #include <dirent.h>
         #include <string.h>
-    rules
-        final = directoryName == [UInt8] & errorCoordinates == Token
-        result = [[UInt8]]
     directoryNameLength .= directoryName.getLength()
     error := false
     C
@@ -117,12 +99,9 @@ func getFilesFromDirectory(directoryName, errorCoordinates)
         }
         closedir(directory);
 
-func askTheUser(flagsFile)
+func askTheUser(flagsFile [UInt8]) [UInt8]
     attributes
         noInline
-    rules
-        final = flagsFile == [UInt8]
-        result = [UInt8]
     if flagsFile.getLength() != 0
         then parse _, line <- flagsFile.asString().split('\n').getAllExceptLast()
             spaceIndex .= line.look(' ')[]
@@ -138,24 +117,19 @@ func askTheUser(flagsFile)
                         break 2
                 print("Incorrect value. Try again.\n")
 
-func saveToTmpFile(file, executable)
+func saveToTmpFile(file [UInt8], executable [UInt8]) [UInt8]
     attributes
         noInline
-    rules
-        final = file == [UInt8] & executable == [UInt8]
-        result = [UInt8]
     result = "/tmp/".join(executable, ".c")
     if < !file.convertTo(BinaryData).writeToFile(result)
         then errorCantWriteToFile(result)
 
-proc compileCFile(cFileName, cCompilerOptions, executable)
+proc compileCFile(cFileName [UInt8], cCompilerOptions [UInt8], executable [UInt8])
     attributes
         noInline
     include
         #include <stdlib.h>
         #include <stdio.h>
-    rules
-        final = cFileName == [UInt8] & cCompilerOptions == [UInt8] & executable == [UInt8]
     executableFullName .= getCineBinaryPath().join(executable, "" + UInt8)
     execString .= "clang ".join(cCompilerOptions, " ", cFileName, " -o ", executableFullName)
     error := false
