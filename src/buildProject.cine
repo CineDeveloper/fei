@@ -62,7 +62,7 @@ proc buildProject(feiFileName [UInt8])
         then errorMissedSection(feiFileName)
     cFile_flagsFile .= sources.compile(executable)
     buildPackage(cFile_flagsFile.first, cFile_flagsFile.second, flags, version, cCompilerOptions, executable, feiFileName)
-    removeTmpFiles(cFile_flagsFile.first, cFile_flagsFile.second)
+    _ = cFile_flagsFile.first.getPath().deleteDirectory(true)
 
 func compile(sources [[UInt8]], executable [UInt8]) Pair([UInt8], [UInt8])
     include
@@ -70,7 +70,7 @@ func compile(sources [[UInt8]], executable [UInt8]) Pair([UInt8], [UInt8])
         #include <stdio.h>
         #include <stddef.h>
     tmpDirectory .= "/tmp/" + executable + "/"
-    cFile .= tmpDirectory + executable + ".c"
+    cFile .= tmpDirectory.join(executable, ".c")
     flagsFile .= tmpDirectory + "flags"
     if < !makeDirectory(tmpDirectory, true)
         then errorCantMakeDirectory(tmpDirectory)
@@ -106,12 +106,7 @@ proc buildPackage(cFileName [UInt8], flagsFileName [UInt8], flags [Pair([UInt8],
     package += version
     package += executable
     feiPathName .= feiFileName.getPath()
-    feiFileNameWithoutPath .= feiFileName.getAllExceptFirstN(feiPathName.getLength())
+    feiFileNameWithoutPath .= feiFileName.getWithoutPath()
     packageFileName .= feiPathName.join("pkgs/", select(feiFileNameWithoutPath.hasSuffix?(".fei"), feiFileNameWithoutPath.getAllExceptLastN(4), feiFileNameWithoutPath), ".fpkg")
     if < !package.writeToFile(packageFileName)
         then errorCantWriteToFile(packageFileName)
-
-proc removeTmpFiles(cFile [UInt8], flagsFile [UInt8])
-    rules
-        final = cFile == [UInt8] & flagsFile == [UInt8]
-    _ = cFile.getPath().deleteDirectory(true)
