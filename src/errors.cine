@@ -28,10 +28,10 @@ proc errorCantMakeDirectory(directory [UInt8])
     print("Error creating directory \042", directory, "\042.\n")
     exit()
 
-proc errorWrongDirectoryName(directory [UInt8])
+proc errorWrongDirectory(directory [UInt8])
     attributes
         noInline
-    print("\042", directory, " is an invalid directory name.\n")
+    print("\042", directory, " is an invalid directory.\n")
     exit()
 
 proc errorCantWriteToFile(file [UInt8])

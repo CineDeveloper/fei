@@ -72,14 +72,13 @@ func compile(sources [[UInt8]], executable [UInt8]) Pair([UInt8], [UInt8])
     tmpDirectory .= "/tmp/" + executable + "/"
     cFile .= tmpDirectory + executable + ".c"
     flagsFile .= tmpDirectory + "flags"
-    makeDirectory(tmpDirectory)
+    if < !makeDirectory(tmpDirectory, true)
+        then errorCantMakeDirectory(tmpDirectory)
     execString := "cine -i"
     parse _, file <- sources
         execString:join(" ", file)
-    execString:join(" -o ", cFile, " -f ", flagsFile, "" + UInt8)
-    cFileLength .= cFile.getLength()
-    C
-        system((char*)execString_.items);
+    execString:join(" -o ", cFile, " -f ", flagsFile)
+    panic(!systemExecute(execString), "")
     result = Pair([UInt8], [UInt8]).create(cFile, flagsFile)
 
 proc buildPackage(cFileName [UInt8], flagsFileName [UInt8], flags [Pair([UInt8], Bool)], version [UInt8], cCompilerOptions [UInt8], executable [UInt8], feiFileName [UInt8])
@@ -115,6 +114,4 @@ proc buildPackage(cFileName [UInt8], flagsFileName [UInt8], flags [Pair([UInt8],
 proc removeTmpFiles(cFile [UInt8], flagsFile [UInt8])
     rules
         final = cFile == [UInt8] & flagsFile == [UInt8]
-    cFile.deleteFile()
-    flagsFile.deleteFile()
-    cFile.getPath().deleteDirectory()
+    _ = cFile.getPath().deleteDirectory(true)

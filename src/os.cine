@@ -1,60 +1,8 @@
-proc makeDirectory(directory [UInt8])
-    attributes
-        noInline
-    include
-        #include <sys/stat.h>
-        #include <string.h>
-        #include <errno.h>
-    directoryNameLength .= directory.getLength()
-    error := false
-    C
-        char zeroEndedDirectoryName[directoryNameLength_ + 1];
-        memcpy(zeroEndedDirectoryName, directory_.items, directoryNameLength_);
-        zeroEndedDirectoryName[directoryNameLength_] = 0;
-        error_ = mkdir(zeroEndedDirectoryName, S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO) != 0;
-        if (error_){
-            error_ = errno != EEXIST;
-        }
-    if < error
-        then errorCantMakeDirectory(directory)
-
 proc makeFile(fileName [UInt8], fileData [UInt8])
     attributes
         noInline
     if < !fileData.convertTo(BinaryData).writeToFile(fileName)
         then errorCantWriteToFile(fileName)
-
-proc deleteFile(name [UInt8])
-    attributes
-        noInline
-    include
-        #include <stdio.h>
-        #include <string.h>
-    length .= name.getLength()
-    C
-        char buffer[length_ + 1];
-        memcpy(buffer, name_.items, length_);
-        buffer[length_] = 0;
-        remove(buffer);
-
-proc deleteDirectory(name [UInt8])
-    attributes
-        noInline
-    include
-        #include <stdio.h>
-        #include <string.h>
-    length .= name.getLength()
-    C
-        char buffer[length_ + 1];
-        memcpy(buffer, name_.items, length_);
-        buffer[length_] = 0;
-        remove(buffer);
-
-func getPath(file [UInt8]) [UInt8]
-    attributes
-        alwaysInline
-    if lastSeparator .= file.lookLast('/'); lastSeparator.item?()
-        then result = file.getFirstN(lastSeparator[] + 1)
 
 func getCineModulePath() [UInt8]
     attributes
@@ -65,39 +13,6 @@ func getCineBinaryPath() [UInt8]
     attributes
         alwaysInline
     result = "/usr/local/bin/"
-
-func getFilesFromDirectory(directoryName [UInt8], errorCoordinates Token)  [[UInt8]]
-    attributes
-        noInline
-    include
-        #include <dirent.h>
-        #include <string.h>
-    directoryNameLength .= directoryName.getLength()
-    error := false
-    C
-        char zeroEndedDirectoryName[directoryNameLength_ + 1];
-        memcpy(zeroEndedDirectoryName, directoryName_.items, directoryNameLength_);
-        zeroEndedDirectoryName[directoryNameLength_] = 0;
-        DIR* directory = opendir(zeroEndedDirectoryName);
-        error_ = directory == NULL;
-    if < error
-        then errorCouldNotOpenDirectory(errorCoordinates.replaceValue(directoryName))
-    string := ""
-    stringLength := 0
-    C
-        for (;;) {
-            struct dirent* directoryEntry = readdir(directory);
-            if (directoryEntry == NULL) {break;}
-            if (directoryEntry->d_type == DT_REG) {
-                stringLength_ = strlen(directoryEntry->d_name);
-    string = [UInt8].init(stringLength)
-    C
-        memcpy(string_.items, directoryEntry->d_name, stringLength_);
-    result += directoryName + string
-    C
-        }
-        }
-        closedir(directory);
 
 func askTheUser(flagsFile [UInt8]) [UInt8]
     attributes
@@ -130,15 +45,6 @@ proc compileCFile(cFileName [UInt8], cCompilerOptions [UInt8], executable [UInt8
     include
         #include <stdlib.h>
         #include <stdio.h>
-    executableFullName .= getCineBinaryPath().join(executable, "" + UInt8)
-    execString .= "clang ".join(cCompilerOptions, " ", cFileName, " -o ", executableFullName)
-    error := false
-    C
-        system((char*)execString_.items);
-        FILE* file = fopen((char*)executableFullName_.items, "r");
-        error_ = file == NULL;
-        if (!error_){
-            fclose(file);
-        }
-    if < error
-        then errorExecutableNotExist(executableFullName.getAllExceptLast())
+    executableFullName .= getCineBinaryPath() + executable
+    if < !systemExecute("clang ".join(cCompilerOptions, " ", cFileName, " -o ", executableFullName))
+        then errorExecutableNotExist(executableFullName)

@@ -42,8 +42,10 @@ func debugFeiFile(projectName [UInt8]) [UInt8]
     }
 
 proc createNewProject(projectName [UInt8])
-    makeDirectory("./src")
-    makeDirectory("./pkgs")
+    if < !makeDirectory("./src", true)
+        then errorCantMakeDirectory("./src")
+    if < !makeDirectory("./pkgs", true)
+        then errorCantMakeDirectory("./pkgs")
     makeFile("./main.cine", mainFile())
     makeFile("./release.fei", releaseFeiFile(projectName))
     makeFile("./debug.fei", debugFeiFile(projectName))
