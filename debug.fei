@@ -4,7 +4,7 @@ sources
     "./main.cine"
 
 flags
-    debug = true
+    debug = "enable"
 
 version = "0.1"
 

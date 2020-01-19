@@ -5,7 +5,7 @@ proc installPackage(packageFileName [UInt8])
     package .= packageBox[]
     position := 0
     cFile .= [UInt8].getFromBinaryData(package, position)
-    flagsFile .= [UInt8].getFromBinaryData(package, position)
+    flagsFile .= [UInt8].getFromBinaryData(package, position).convertTo(BinaryData)
     cCompilerOptions .= [UInt8].getFromBinaryData(package, position)
     version .= [UInt8].getFromBinaryData(package, position)
     executable .= [UInt8].getFromBinaryData(package, position)

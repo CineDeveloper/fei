@@ -1,64 +1,64 @@
 proc errorNotExpectedCMDArg(argument [UInt8])
     attributes
         noInline
-    panic("\042".join(argument, " is an unexpected command line argument.\n"))
+    panic("\042".join(argument, " is an unexpected command line argument."))
 
 proc errorWhatInstall()
     attributes
         noInline
-    panic("What needs to be installed?\n")
+    panic("What needs to be installed?")
 
 proc errorWrongCMDLineArg(argument [UInt8])
     attributes
         noInline
-    panic("\042".join(argument, "\042 is an unknown command-line argument.\n"))
+    panic("\042".join(argument, "\042 is an unknown command-line argument."))
 
 proc errorUnnecessaryArgument(argument [UInt8])
     attributes
         noInline
-    panic("The argument \042".join(argument, "\042 must be specified without any other arguments.\n"))
+    panic("The argument \042".join(argument, "\042 must be specified without any other arguments."))
 
 proc errorCantMakeDirectory(directory [UInt8])
     attributes
         noInline
-    panic("Error creating directory \042".join(directory, "\042.\n"))
+    panic("Error creating directory \042".join(directory, "\042."))
 
 proc errorWrongDirectory(directory [UInt8])
     attributes
         noInline
-    panic("\042".join(directory, " is an invalid directory.\n"))
+    panic("\042".join(directory, " is an invalid directory."))
 
 proc errorCantWriteToFile(file [UInt8])
     attributes
         noInline
-    panic("It is not possible to write to the file \042".join(file, "\042.\n"))
+    panic("It is not possible to write to the file \042".join(file, "\042."))
 
 proc errorCantLoadFile(file [UInt8])
     attributes
         noInline
-    panic("It is not possible to read the file \042".join(file, "\042.\n"))
+    panic("It is not possible to read the file \042".join(file, "\042."))
 
 proc errorNotExpectedToken(have Token, expected [UInt8])
     attributes
         noInline
     if expected == ""
-        then panic(have.coordinatesToString().join("\042", have[], "\042 not expected.\n"))
-        else panic(have.coordinatesToString().join("Expected \042", expected, "\042 but there is the \042", have[], "\042.\n"))
+        then panic(have.coordinatesToString().join("\042", have[], "\042 not expected."))
+        else panic(have.coordinatesToString().join("Expected \042", expected, "\042 but there is the \042", have[], "\042."))
 
 proc errorMissedSection(fileName [UInt8])
     attributes
         noInline
-    panic("One of the sections (sources, flags, version, cCompilerOptions, executable) is missing.\n")
+    panic("One of the sections (sources, flags, version, cCompilerOptions, executable) is missing.")
 
 proc errorSourcesNotCompiled()
     attributes
         noInline
-    panic("The source code is not compiled.\n")
+    panic("The source code is not compiled.")
 
 proc errorNotExpectedEOL(lastToken Token, expected [UInt8])
     attributes
         noInline
-    lastPartOfMessage .= select(expected == "", "Unexpected end of line.\n", " \042" + expected + "\042 was expected but the end of the line was found.\n")
+    lastPartOfMessage .= select(expected == "", "Unexpected end of line.\n", " \042" + expected + "\042 was expected but the end of the line was found.")
     unexistedToken := lastToken
     unexistedToken:row += unexistedToken[].getLength()
     panic(unexistedToken.coordinatesToString() + lastPartOfMessage)
@@ -66,39 +66,44 @@ proc errorNotExpectedEOL(lastToken Token, expected [UInt8])
 proc errorAlreadyExist(name Token, whatExist [UInt8])
     attributes
         noInline
-    panic(name.coordinatesToString().join("The ", whatExist, " \042", name[], "\042 already exists.\n"))
+    panic(name.coordinatesToString().join("The ", whatExist, " \042", name[], "\042 already exists."))
 
 proc errorWrongName(name Token, nameOwner [UInt8])
     attributes
         noInline
-    panic(name.coordinatesToString().join("Wrong ", nameOwner, " name. (", name[], ")\n"))
+    panic(name.coordinatesToString().join("Wrong ", nameOwner, " name. (", name[], ")"))
 
 proc errorSourcesNotExist()
     attributes
         noInline
-    panic("No source files found.\n")
+    panic("No source files found.")
 
 proc errorCouldNotOpenDirectory(directory Token)
     attributes
         noInline
-    panic(directory.coordinatesToString().join("Could not open the \042", directory[], "\042 directory.\n"))
+    panic(directory.coordinatesToString().join("Could not open the \042", directory[], "\042 directory."))
 
 proc errorExpectSubBlock(file [UInt8], line UInt64)
     attributes
         noInline
-    panic("File: \042".join(file, "\042, line: ", line.toString(), ". A sub block was expected.\n"))
+    panic("File: \042".join(file, "\042, line: ", line.toString(), ". A sub block was expected."))
 
 proc errorWrongLevel(file [UInt8], line UInt64, expectedLevel UInt64, haveLevel UInt64)
     attributes
         noInline
-    panic("File: \042".join(file, "\042, line: ", line.toString(), ". Wrong level. (expected - ", expectedLevel.toString(), ", have - ", haveLevel.toString(), ")\n"))
+    panic("File: \042".join(file, "\042, line: ", line.toString(), ". Wrong level. (expected - ", expectedLevel.toString(), ", have - ", haveLevel.toString(), ")"))
 
 proc errorTabNotAllowed(file [UInt8], line UInt64, row UInt64)
     attributes
         noInline
-    panic("File: \042".join(file, "\042, line: ", line.toString(), ", row: ", row.toString(), ". The tab character is not allowed to format text.\n"))
+    panic("File: \042".join(file, "\042, line: ", line.toString(), ", row: ", row.toString(), ". The tab character is not allowed to format text."))
 
 proc errorExecutableNotExist(executableFileName [UInt8])
     attributes
         noInline
     panic("After compilation, an executable file was not found.(".join(executableFileName, ")"))
+
+proc errorNotExist(name Token, whatNotExist [UInt8])
+    attributes
+        noInline
+    panic(name.coordinatesToString().join("The ", whatNotExist, " \042", name[], "\042 does not exist."))

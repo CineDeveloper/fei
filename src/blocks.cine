@@ -24,7 +24,7 @@ func getSources(blocks [Block], feiFileName [UInt8]) [[UInt8]]
     if < result.getLength() == 0
         then errorSourcesNotExist()
 
-func getFlags(blocks [Block]) [Pair([UInt8], Bool)]
+func getFlags(blocks [Block]) [Pair(Token, Token)]
     flagsNames := Set([UInt8])
     parse _, block <- blocks
         block.noSubBlocks!()
@@ -34,8 +34,8 @@ func getFlags(blocks [Block]) [Pair([UInt8], Bool)]
             then errorAlreadyExist(flagName, "flag")
         flagsNames += flagName[]
         block.next!(tokenIndex, "=")
-        value .= block.next(tokenIndex)
+        value := block.next(tokenIndex)
+        tokenIndex--
+        value:value = block.getString(tokenIndex)
         block.eol!(tokenIndex)
-        if < value[] != "true" && value[] != "false"
-            then errorNotExpectedToken(value, "")
-        result += Pair([UInt8], Bool).create(flagName[], select(value[] == "true", true, false))
+        result += #result[0].create(flagName, value)

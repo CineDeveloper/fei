@@ -15,7 +15,7 @@ func releaseFeiFile(projectName [UInt8]) [UInt8]
         "    \042./src/\042\n"
         "    \042./main.cine\042\n\n"
         "flags\n"
-        "    debug = false\n\n"
+        "    debug = \042disable\042\n\n"
         "version = \0420.1\042\n\n"
         "cCompilerOptions = \042-march=native -O2 -lm -w\042\n"
         "executable = \042".join(
@@ -32,7 +32,7 @@ func debugFeiFile(projectName [UInt8]) [UInt8]
         "    \042./src/\042\n"
         "    \042./main.cine\042\n\n"
         "flags\n"
-        "    debug = true\n\n"
+        "    debug = \042enable\042\n\n"
         "version = \0420.1\042\n\n"
         "cCompilerOptions = \042-march=native -O1 -lm -Wall -Wpedantic -Wextra -Wno-visibility -Wno-missing-braces -Wno-gnu-compound-literal-initializer -Wno-unused-variable -Wno-unused-parameter -Wno-format-security -Wno-implicitly-unsigned-literal -Wno-unused-function\042\n"
         "executable = \042".join(

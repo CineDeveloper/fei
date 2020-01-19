@@ -14,23 +14,25 @@ func getCineBinaryPath() [UInt8]
         alwaysInline
     result = "/usr/local/bin/"
 
-func askTheUser(flagsFile [UInt8]) [UInt8]
+func askTheUser(flagsFile BinaryData) [UInt8]
     attributes
         noInline
-    if flagsFile.getLength() != 0
-        then parse _, line <- flagsFile.asString().split('\n').getAllExceptLast()
-            spaceIndex .= line.look(' ')[]
-            flagName .= line.getFirstN(spaceIndex)
-            description .= line.getAllExceptFirstN(spaceIndex + 1)
-            print("flag: ", flagName, "\ndescription: ", description, "\n")
-            for
-                print("Enter \042true\042 or \042false\042.\n")
-                userInput .= getLineFromSTDIN()
-                if userInput == "true" || userInput == "false"
+    flags := Map([UInt8], Flag)
+    position := 0
+    for flagsLength := UInt64.getFromBinaryData(flagsFile, position); flagsLength != 0; flagsLength--
+        name .= [UInt8].getFromBinaryData(flagsFile, position)
+        flag_ .= Flag.getFromBinaryData(flagsFile, position)
+        print("Flag name: ", name, "\nDescription: ", flag_.description,"\nVariants:\n")
+        parse variantNumber, variant <- flag_.variants
+            print("    ", variantNumber, " - ", variant, "\n")
+        for
+            print("Enter the variant number: ")
+            if variantNumberBox .= UInt64.fromString(getLineFromSTDIN()); variantNumberBox.item?()
+                then if variantNumberBox[] < flag_.variants.getLength()
                     then
-                        result:join("#define __FLAG_", flagName, " ", select(userInput == "true", "1", "0"), "\n")
-                        break 2
-                print("Incorrect value. Try again.\n")
+                        result:join("#define __FLAG_", name, " ", variantNumberBox[].toString(), "\n")
+                        break
+            print("Incorrect the variant number. Try again.\n")
 
 func saveToTmpFile(file [UInt8], executable [UInt8]) [UInt8]
     attributes
@@ -42,9 +44,6 @@ func saveToTmpFile(file [UInt8], executable [UInt8]) [UInt8]
 proc compileCFile(cFileName [UInt8], cCompilerOptions [UInt8], executable [UInt8])
     attributes
         noInline
-    include
-        #include <stdlib.h>
-        #include <stdio.h>
     executableFullName .= getCineBinaryPath() + executable
     if < !systemExecute("clang ".join(cCompilerOptions, " ", cFileName, " -o ", executableFullName))
         then errorExecutableNotExist(executableFullName)

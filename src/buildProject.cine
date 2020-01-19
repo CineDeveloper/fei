@@ -2,7 +2,7 @@ proc buildProject(feiFileName [UInt8])
     //(bits 0 -> 4) sources, flags, version, cCompilerOptions, executable
     alreadyParsed := 0
     sources := [[UInt8]]
-    flags := [Pair([UInt8], Bool)]
+    flags := [Pair(Token, Token)]
     version := [UInt8]
     cCompilerOptions := [UInt8]
     executable := [UInt8]
@@ -65,10 +65,6 @@ proc buildProject(feiFileName [UInt8])
     _ = cFile_flagsFile.first.getPath().deleteDirectory(true)
 
 func compile(sources [[UInt8]], executable [UInt8]) Pair([UInt8], [UInt8])
-    include
-        #include <stdlib.h>
-        #include <stdio.h>
-        #include <stddef.h>
     tmpDirectory .= "/tmp/" + executable + "/"
     cFile .= tmpDirectory.join(executable, ".c")
     flagsFile .= tmpDirectory + "flags"
@@ -81,32 +77,48 @@ func compile(sources [[UInt8]], executable [UInt8]) Pair([UInt8], [UInt8])
     panic(!systemExecute(execString), "")
     result = Pair([UInt8], [UInt8]).create(cFile, flagsFile)
 
-proc buildPackage(cFileName [UInt8], flagsFileName [UInt8], flags [Pair([UInt8], Bool)], version [UInt8], cCompilerOptions [UInt8], executable [UInt8], feiFileName [UInt8])
+proc buildPackage(cFileName [UInt8], programFlagsFileName [UInt8], feiFlags [Pair(Token, Token)], version [UInt8], cCompilerOptions [UInt8], executable [UInt8], feiFileName [UInt8])
     package := BinaryData
     cFileBox .= cFileName.loadFile()
-    flagsFileBox .= flagsFileName.loadFile()
-    if < cFileBox.empty?() || flagsFileBox.empty?()
+    programFlagsFileBox .= programFlagsFileName.loadFile()
+    if < cFileBox.empty?() || programFlagsFileBox.empty?()
         then errorSourcesNotCompiled()
-    buffer := ""
-    parse _, flag_ <- flags
-        buffer:join("#define __FLAG_", flag_.first, " ", select(flag_.second, "1", "0"), "\n")
-    buffer += cFileBox[].convertTo([UInt8]).asString()
-    package += buffer
-    buffer = ""
-    flagsFile := flagsFileBox[].convertTo([UInt8]).asString()
-    if flagsFile.getLength() != 0
-        then parse _, line <- flagsFile.split('\n').getAllExceptLast()
-            flagName .= line.getFirstN(line.look(' ')[])
-            parse _, feiFlag <- flags
-                if feiFlag.first == flagName
-                    then continue first
-            buffer:join(line, "\n")
-    package += buffer
+    programFlagsFile .= programFlagsFileBox[]
+    position := 0
+    programFlags := Map([UInt8], Flag)
+    for flagsLength := UInt64.getFromBinaryData(programFlagsFile, position); flagsLength != 0; flagsLength--
+        name .= [UInt8].getFromBinaryData(programFlagsFile, position)
+        flag_ .= Flag.getFromBinaryData(programFlagsFile, position)
+        programFlags:add(name, flag_)
+    cFile := ""
+    parse _, feiFlag <- feiFlags
+        programFlagBox .= programFlags[feiFlag.first[]]
+        if < programFlagBox.empty?()
+            then errorNotExist(feiFlag.first, "flag")
+        programFlags -= feiFlag.first[]
+        variantIsValid := false
+        parse variantNumber, variant <- programFlagBox[].variants
+            if variant == feiFlag.second[]
+                then
+                    variantIsValid = true
+                    cFile:join("#define __FLAG_", feiFlag.first[], " ", variantNumber.toString(), "\n")
+                    break
+        if < !variantIsValid
+            then errorNotExist(feiFlag.second, "flag variant")
+    cFile += cFileBox[].convertTo([UInt8])
+    package += cFile
+    flags := BinaryData
+    flags += programFlags.getLength()
+    parse name, flag_ <- programFlags
+        flags += name
+        flags += flag_
+    package += flags.convertTo([UInt8])
     package += cCompilerOptions
     package += version
     package += executable
     feiPathName .= feiFileName.getPath()
     feiFileNameWithoutPath .= feiFileName.getWithoutPath()
     packageFileName .= feiPathName.join("pkgs/", select(feiFileNameWithoutPath.hasSuffix?(".fei"), feiFileNameWithoutPath.getAllExceptLastN(4), feiFileNameWithoutPath), ".fpkg")
+    _ = makeDirectory(feiPathName + "pkgs", true)
     if < !package.writeToFile(packageFileName)
         then errorCantWriteToFile(packageFileName)
