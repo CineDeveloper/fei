@@ -41,7 +41,8 @@ func debugFeiFile(projectName [UInt8]) [UInt8]
         "\042\n")
     }
 
-proc createNewProject(projectName [UInt8])
+proc createNewProject(data BinaryData)
+    projectName .= data.convertTo([UInt8])
     if < !makeDirectory("./src", true)
         then errorCantMakeDirectory("./src")
     if < !makeDirectory("./pkgs", true)

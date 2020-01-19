@@ -1,5 +1,8 @@
-proc buildProject(feiFileName [UInt8])
+proc buildProject(data BinaryData)
     //(bits 0 -> 4) sources, flags, version, cCompilerOptions, executable
+    position := 0
+    feiFileName .= [UInt8].getFromBinaryData(data, position)
+    cCopeFileName .= [UInt8].getFromBinaryData(data, position)
     alreadyParsed := 0
     sources := [[UInt8]]
     flags := [Pair(Token, Token)]
@@ -61,7 +64,7 @@ proc buildProject(feiFileName [UInt8])
     if < alreadyParsed != 31
         then errorMissedSection(feiFileName)
     cFile_flagsFile .= sources.compile(executable)
-    buildPackage(cFile_flagsFile.first, cFile_flagsFile.second, flags, version, cCompilerOptions, executable, feiFileName)
+    buildPackage(cFile_flagsFile.first, cFile_flagsFile.second, flags, version, cCompilerOptions, executable, feiFileName, cCopeFileName)
     _ = cFile_flagsFile.first.getPath().deleteDirectory(true)
 
 func compile(sources [[UInt8]], executable [UInt8]) Pair([UInt8], [UInt8])
@@ -77,7 +80,7 @@ func compile(sources [[UInt8]], executable [UInt8]) Pair([UInt8], [UInt8])
     panic(!systemExecute(execString), "")
     result = Pair([UInt8], [UInt8]).create(cFile, flagsFile)
 
-proc buildPackage(cFileName [UInt8], programFlagsFileName [UInt8], feiFlags [Pair(Token, Token)], version [UInt8], cCompilerOptions [UInt8], executable [UInt8], feiFileName [UInt8])
+proc buildPackage(cFileName [UInt8], programFlagsFileName [UInt8], feiFlags [Pair(Token, Token)], version [UInt8], cCompilerOptions [UInt8], executable [UInt8], feiFileName [UInt8], cCopeFileName [UInt8])
     package := BinaryData
     cFileBox .= cFileName.loadFile()
     programFlagsFileBox .= programFlagsFileName.loadFile()
@@ -106,6 +109,8 @@ proc buildPackage(cFileName [UInt8], programFlagsFileName [UInt8], feiFlags [Pai
         if < !variantIsValid
             then errorNotExist(feiFlag.second, "flag variant")
     cFile += cFileBox[].convertTo([UInt8])
+    if cCopeFileName != ""
+        then makeFile(cCopeFileName, cFile)
     package += cFile
     flags := BinaryData
     flags += programFlags.getLength()

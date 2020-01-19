@@ -1,4 +1,5 @@
-proc installPackage(packageFileName [UInt8])
+proc installPackage(data BinaryData)
+    packageFileName .= data.convertTo([UInt8])
     packageBox .= packageFileName.loadFile()
     if < packageBox.empty?()
         then errorCantLoadFile(packageFileName)

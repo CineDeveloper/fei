@@ -7,11 +7,12 @@ func helpMessage() [UInt8]
     attributes
         alwaysInline
     result = "Fei - installer and package builder for programs written in the cine programming language.\n"{
-        "\tfei new PROJECT_NAME - create a new project in the current directory.\n"
-        "\tfei build FILE - build the project according to the instructions specified in the file, if the file is not specified, then use the file \042release.fei\042.\n"
-        "\tfei install FILE - Install the program from the file.\n"
-        "\t-h or --help - show help\n"
-        "\t-v or --version - show version\n"
+        "    fei new PROJECT_NAME - create a new project in the current directory.\n"
+        "    fei build FILE - build the project according to the instructions specified in the file, if the file is not specified, then use the file \042release.fei\042.\n"
+        "        --ccopy FILE - save the copy of '.c' file."
+        "    fei install FILE - Install the program from the file.\n"
+        "    -h or --help - show help\n"
+        "    -v or --version - show version\n"
     }
 
 func getActionAndData() ActionAndData
@@ -19,36 +20,76 @@ func getActionAndData() ActionAndData
     if arguments.getLength() == 0
         then showMessage(helpMessage())
         else
-            if < arguments.getLength() > 2
-                then errorNotExpectedCMDArg(arguments[2])
+            argumentIndex := 1
             case arguments[0] of
                 "-v"; "--version"
-                    onlyOne!(arguments[0])
+                    arguments.eoa!(argumentIndex)
                     showMessage(version())
                 "-h"; "--help"
-                    onlyOne!(arguments[0])
+                    arguments.eoa!(argumentIndex)
                     showMessage(helpMessage())
                 "new"
-                    if arguments.getLength() == 1
-                        then showMessage(helpMessage())
                     result:action = a_New
-                    result:data = arguments[1]
+                    result:data = arguments.next(argumentIndex).convertTo(BinaryData)
+                    arguments.eoa!(argumentIndex)
                 "build"
                     result:action = a_Build
-                    result:data = select(arguments.getLength() == 1, "release.fei", arguments[1])
+                    ccopy := ""
+                    feiFile := ""
+                    for !arguments.eoa?(argumentIndex)
+                        if arguments.next?(argumentIndex, "--ccopy")
+                            then if > ccopy == ""
+                                then ccopy = arguments.next(argumentIndex)
+                                else errorNotExpectedCMDArg("--ccopy", "")
+                            else if > feiFile == ""
+                                then if feiFile = arguments.next(argumentIndex); < feiFile.hasPrefix?("-")
+                                    then errorNotExpectedCMDArg(feiFile, "")
+                                else errorNotExpectedCMDArg(arguments[argumentIndex], "")
+                    arguments.eoa!(argumentIndex)
+                    if feiFile == ""
+                        then feiFile = "release.fei"
+                    result:data += feiFile
+                    result:data += ccopy
                 "install"
-                    if < arguments.getLength() == 1
-                        then errorWhatInstall()
                     result:action = a_Install
-                    result:data = arguments[1]
+                    result:data = arguments.next(argumentIndex).convertTo(BinaryData)
+                    arguments.eoa!(argumentIndex)
                 default
                     errorWrongCMDLineArg(arguments[0])
 
-proc onlyOne!(argument [UInt8])
+func next(arguments [[UInt8]], :argumentIndex UInt64) [UInt8]
     attributes
         alwaysInline
-    if < getCMDArgumetsCount() != 1
-        then errorUnnecessaryArgument(argument)
+    if < argumentIndex >= arguments.getLength()
+        then errorNotExpectedEOA()
+    result = arguments[argumentIndex]
+    argumentIndex++
+
+func next?(arguments [[UInt8]], :argumentIndex UInt64, variant [UInt8]) Bool
+    attributes
+        alwaysInline
+    if argumentIndex < arguments.getLength()
+        then if arguments[argumentIndex] == variant
+            then
+                argumentIndex++
+                return true
+
+proc next!(arguments [[UInt8]], :argumentIndex UInt64, variant [UInt8])
+    attributes
+        alwaysInline
+    if < !arguments.next?(argumentIndex, variant)
+        then if argumentIndex < arguments.getLength()
+            then errorNotExpectedCMDArg(arguments[argumentIndex], variant)
+            else errorNotExpectedEOA()
+
+func eoa?(arguments [[UInt8]], argumentIndex UInt64) Bool
+    attributes
+        alwaysInline
+    result = argumentIndex >= arguments.getLength()
+
+proc eoa!(arguments [[UInt8]], argumentIndex UInt64)
+    if < !arguments.eoa?(argumentIndex)
+        then errorNotExpectedCMDArg(arguments[argumentIndex], "")
 
 proc showMessage(message [UInt8])
     attributes

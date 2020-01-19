@@ -1,22 +1,7 @@
-proc errorNotExpectedCMDArg(argument [UInt8])
-    attributes
-        noInline
-    panic("\042".join(argument, " is an unexpected command line argument."))
-
-proc errorWhatInstall()
-    attributes
-        noInline
-    panic("What needs to be installed?")
-
 proc errorWrongCMDLineArg(argument [UInt8])
     attributes
         noInline
     panic("\042".join(argument, "\042 is an unknown command-line argument."))
-
-proc errorUnnecessaryArgument(argument [UInt8])
-    attributes
-        noInline
-    panic("The argument \042".join(argument, "\042 must be specified without any other arguments."))
 
 proc errorCantMakeDirectory(directory [UInt8])
     attributes
@@ -44,6 +29,18 @@ proc errorNotExpectedToken(have Token, expected [UInt8])
     if expected == ""
         then panic(have.coordinatesToString().join("\042", have[], "\042 not expected."))
         else panic(have.coordinatesToString().join("Expected \042", expected, "\042 but there is the \042", have[], "\042."))
+
+proc errorNotExpectedCMDArg(have [UInt8], expected [UInt8])
+    attributes
+        noInline
+    if expected == ""
+        then panic("\042".join(have, "\042 not expected command line argument."))
+        else panic("Expected \042".join(expected, "\042 but there is the \042", have, "\042."))
+
+proc errorNotExpectedEOA()
+    attributes
+        noInline
+    panic("Unexpected end of command line arguments.")
 
 proc errorMissedSection(fileName [UInt8])
     attributes

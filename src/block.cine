@@ -22,7 +22,7 @@ func next?(block Block, :tokenIndex UInt64, variant [UInt8]) Bool
     attributes
         alwaysInline
     if tokenIndex < block.line.getLength()
-        then if token := block.line[tokenIndex]; token[] == variant
+        then if token .= block.line[tokenIndex]; token[] == variant
             then
                 result = true
                 tokenIndex++
