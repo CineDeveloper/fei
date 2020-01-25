@@ -45,7 +45,7 @@ proc errorNotExpectedEOA()
 proc errorMissedSection(fileName [UInt8])
     attributes
         noInline
-    panic("One of the sections (sources, flags, version, cCompilerOptions, executable) is missing.")
+    panic("One of the sections (flags, version, cCompilerOptions) is missing.")
 
 proc errorSourcesNotCompiled()
     attributes
@@ -95,12 +95,12 @@ proc errorTabNotAllowed(file [UInt8], line UInt64, row UInt64)
         noInline
     panic("File: \042".join(file, "\042, line: ", line.toString(), ", row: ", row.toString(), ". The tab character is not allowed to format text."))
 
-proc errorExecutableNotExist(executableFileName [UInt8])
-    attributes
-        noInline
-    panic("After compilation, an executable file was not found.(".join(executableFileName, ")"))
-
 proc errorNotExist(name Token, whatNotExist [UInt8])
     attributes
         noInline
     panic(name.coordinatesToString().join("The ", whatNotExist, " \042", name[], "\042 does not exist."))
+
+proc errorNotValidPackage(packageFileName [UInt8])
+    attributes
+        noInline
+    panic("File \042".join(packageFileName, "\042 is not a 'fpkg' package."))

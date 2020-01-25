@@ -3,6 +3,7 @@ type ActionAndData
     data BinaryData
 
 enums
-    a_New
+    a_NewProgram
+    a_NewModule
     a_Build
     a_Install

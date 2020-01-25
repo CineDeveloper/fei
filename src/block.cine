@@ -50,20 +50,13 @@ proc eol!(block Block, tokenIndex UInt64)
 func getVersion(block Block) [UInt8]
     attributes
         alwaysInline
-    tokenIndex := 1
+    tokenIndex := 0
+    block.next!(tokenIndex, "version")
     block.next!(tokenIndex, "=")
     result = block.getString(tokenIndex)
     block.eol!(tokenIndex)
 
 func getCCompilerOptions(block Block) [UInt8]
-    attributes
-        alwaysInline
-    tokenIndex := 1
-    block.next!(tokenIndex, "=")
-    result = block.getString(tokenIndex)
-    block.eol!(tokenIndex)
-
-func getExecutable(block Block) [UInt8]
     attributes
         alwaysInline
     tokenIndex := 1
@@ -93,3 +86,29 @@ func getFlagName(block Block, :tokenIndex UInt64) Token
                 then nameCorrect = !result[].hasPrefix?("builtIn")
     if < !nameCorrect
         then errorWrongName(result, "flag")
+
+func unnamed(a Block, b Block) Bool #1
+    attributes
+        id = "block less function"
+    lineA := ""
+    lineB := ""
+    parse _, token <- a.line
+        lineA:join(token[], " ")
+    parse _, token <- b.line
+        lineB:join(token[], " ")
+    result = lineA < lineB
+
+func toString(block Block, spaces UInt64) [UInt8]
+    result = ""
+    for counter := 0; counter < spaces; counter++
+        result += ' '
+    firstToken .= block.line[0]
+    if (firstToken[] == "C" || firstToken[] == "include") && firstToken.file == ""
+        then parse _, line <- block.line
+            result:join(line[], "\n")
+        else
+            parse _, token <- block.line
+                result:join(token[], " ")
+            result:setLast('\n')
+            parse _, subBlock <- block.subBlocks
+                result += subBlock.toString(spaces + 4)

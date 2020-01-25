@@ -1,0 +1,11 @@
+proc main()
+    actionAndData .= getActionAndData()
+    case actionAndData.action of
+        a_NewProgram
+            createNewProgram(actionAndData.data)
+        a_NewModule
+            createNewModule(actionAndData.data)
+        a_Build
+            buildProject(actionAndData.data)
+        a_Install
+            installProgram(actionAndData.data)

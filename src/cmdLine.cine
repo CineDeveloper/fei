@@ -7,7 +7,8 @@ func helpMessage() [UInt8]
     attributes
         alwaysInline
     result = "Fei - installer and package builder for programs written in the cine programming language.\n"{
-        "    fei new PROJECT_NAME - create a new project in the current directory.\n"
+        "    fei new PROGRAM_NAME - create a new program in the current directory.\n"
+        "    fei new-module MODULE_NAME - create a new module in the current directory.\n"
         "    fei build FILE - build the project according to the instructions specified in the file, if the file is not specified, then use the file \042release.fei\042.\n"
         "        --ccopy FILE - save the copy of '.c' file."
         "    fei install FILE - Install the program from the file.\n"
@@ -29,7 +30,11 @@ func getActionAndData() ActionAndData
                     arguments.eoa!(argumentIndex)
                     showMessage(helpMessage())
                 "new"
-                    result:action = a_New
+                    result:action = a_NewProgram
+                    result:data = arguments.next(argumentIndex).convertTo(BinaryData)
+                    arguments.eoa!(argumentIndex)
+                "new-module"
+                    result:action = a_NewModule
                     result:data = arguments.next(argumentIndex).convertTo(BinaryData)
                     arguments.eoa!(argumentIndex)
                 "build"

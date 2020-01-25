@@ -1,87 +1,94 @@
 proc buildProject(data BinaryData)
-    //(bits 0 -> 4) sources, flags, version, cCompilerOptions, executable
     position := 0
     feiFileName .= [UInt8].getFromBinaryData(data, position)
-    cCopeFileName .= [UInt8].getFromBinaryData(data, position)
+    cCopyFileName .= [UInt8].getFromBinaryData(data, position)
+    blocks .= feiFileName.loadBlocks(false)
+    blocks[0].noSubBlocks!()
+    if < blocks.getLength() == 0
+        then errorNotExpectedEOL(Token{file: feiFileName}, "")
+    if blocks[0].line[0][] == "module"
+        then if > cCopyFileName == ""
+            then buildModule(blocks, feiFileName)
+            else errorNotExpectedCMDArg("--ccopy", "")
+        else
+            tokenIndex := 0
+            blocks[0].next!(tokenIndex, "program")
+            buildProgram(blocks, feiFileName, cCopyFileName)
+
+proc buildProgram(blocks [Block], feiFileName [UInt8], cCopyFileName [UInt8])
+    //(bits 0 -> 2) flags, version, cCompilerOptions
     alreadyParsed := 0
-    sources := [[UInt8]]
     flags := [Pair(Token, Token)]
     version := [UInt8]
     cCompilerOptions := [UInt8]
-    executable := [UInt8]
-    parse _, block <- feiFileName.loadBlocks()
+    tokenIndex := 1
+    programName .= blocks[0].getString(tokenIndex)
+    blocks[0].eol!(tokenIndex)
+    parse _, block <- blocks.getAllExceptFirst()
         error := false
-        tokenIndex := 0
+        tokenIndex = 0
         firstToken .= block.next(tokenIndex)
         case firstToken[] of
-            "sources"
+            "flags"
                 if < (alreadyParsed & 1) == 1
                     then
                         error = true
                         break
                 alreadyParsed |= 1
-                block.subBlocks!()
-                sources = block.subBlocks.getSources(feiFileName)
-            "flags"
+                if block.subBlocks.getLength() != 0
+                    then flags = block.subBlocks.getFlags()
+            "version"
                 if < (alreadyParsed & 2) == 2
                     then
                         error = true
                         break
                 alreadyParsed |= 2
-                if block.subBlocks.getLength() != 0
-                    then flags = block.subBlocks.getFlags()
-            "version"
+                block.noSubBlocks!()
+                version = block.getVersion()
+                tokenIndex++
+            "cCompilerOptions"
                 if < (alreadyParsed & 4) == 4
                     then
                         error = true
                         break
                 alreadyParsed |= 4
                 block.noSubBlocks!()
-                version = block.getVersion()
-                tokenIndex++
-            "cCompilerOptions"
-                if < (alreadyParsed & 8) == 8
-                    then
-                        error = true
-                        break
-                alreadyParsed |= 8
-                block.noSubBlocks!()
                 cCompilerOptions = block.getCCompilerOptions()
-                tokenIndex++
-            "executable"
-                if < (alreadyParsed & 16) == 16
-                    then
-                        error = true
-                        break
-                alreadyParsed |= 16
-                block.noSubBlocks!()
-                executable = block.getExecutable()
                 tokenIndex++
             default
                 error = true
         if < error
             then errorNotExpectedToken(firstToken, "")
-    if < alreadyParsed != 31
+    feiPath .= feiFileName.getPath()
+    sources .= feiPath.getSources()
+    modules .= feiPath.getModules()
+    if < alreadyParsed != 7
         then errorMissedSection(feiFileName)
-    cFile_flagsFile .= sources.compile(executable)
-    buildPackage(cFile_flagsFile.first, cFile_flagsFile.second, flags, version, cCompilerOptions, executable, feiFileName, cCopeFileName)
+    printLn("Building...")
+    cFile_flagsFile .= sources.compileProgram(modules, programName)
+    buildProgramPackage(cFile_flagsFile.first, cFile_flagsFile.second, flags, version, cCompilerOptions, programName, feiFileName, cCopyFileName)
+    printLn("Done.")
     _ = cFile_flagsFile.first.getPath().deleteDirectory(true)
 
-func compile(sources [[UInt8]], executable [UInt8]) Pair([UInt8], [UInt8])
-    tmpDirectory .= "/tmp/" + executable + "/"
-    cFile .= tmpDirectory.join(executable, ".c")
+func compileProgram(sources [[UInt8]], modules [[UInt8]], programName [UInt8]) Pair([UInt8], [UInt8])
+    tmpDirectory .= "/tmp/" + programName + "/"
+    cFile .= tmpDirectory.join(programName, ".c")
     flagsFile .= tmpDirectory + "flags"
     if < !makeDirectory(tmpDirectory, true)
         then errorCantMakeDirectory(tmpDirectory)
-    execString := "cine -i"
+    modulesCineFileName .= modules.toCineFile(tmpDirectory)
+    execString := "cine -i " + modulesCineFileName
     parse _, file <- sources
         execString:join(" ", file)
     execString:join(" -o ", cFile, " -f ", flagsFile)
     panic(!systemExecute(execString), "")
     result = Pair([UInt8], [UInt8]).create(cFile, flagsFile)
 
-proc buildPackage(cFileName [UInt8], programFlagsFileName [UInt8], feiFlags [Pair(Token, Token)], version [UInt8], cCompilerOptions [UInt8], executable [UInt8], feiFileName [UInt8], cCopeFileName [UInt8])
+proc buildProgramPackage(cFileName [UInt8], programFlagsFileName [UInt8], feiFlags [Pair(Token, Token)], version [UInt8], cCompilerOptions [UInt8], programName [UInt8], feiFileName [UInt8], cCopyFileName [UInt8])
     package := BinaryData
+    package += getProgramPackageID()
+    package += programName
+    package += version
     cFileBox .= cFileName.loadFile()
     programFlagsFileBox .= programFlagsFileName.loadFile()
     if < cFileBox.empty?() || programFlagsFileBox.empty?()
@@ -109,8 +116,8 @@ proc buildPackage(cFileName [UInt8], programFlagsFileName [UInt8], feiFlags [Pai
         if < !variantIsValid
             then errorNotExist(feiFlag.second, "flag variant")
     cFile += cFileBox[].convertTo([UInt8])
-    if cCopeFileName != ""
-        then makeFile(cCopeFileName, cFile)
+    if cCopyFileName != ""
+        then makeFile(cCopyFileName, cFile)
     package += cFile
     flags := BinaryData
     flags += programFlags.getLength()
@@ -119,11 +126,122 @@ proc buildPackage(cFileName [UInt8], programFlagsFileName [UInt8], feiFlags [Pai
         flags += flag_
     package += flags.convertTo([UInt8])
     package += cCompilerOptions
-    package += version
-    package += executable
     feiPathName .= feiFileName.getPath()
     feiFileNameWithoutPath .= feiFileName.getWithoutPath()
-    packageFileName .= feiPathName.join("pkgs/", select(feiFileNameWithoutPath.hasSuffix?(".fei"), feiFileNameWithoutPath.getAllExceptLastN(4), feiFileNameWithoutPath), ".fpkg")
+    packageFileName .= feiPathName.join("pkgs/", programName, "-", version, ".fpkg")
     _ = makeDirectory(feiPathName + "pkgs", true)
     if < !package.writeToFile(packageFileName)
         then errorCantWriteToFile(packageFileName)
+
+proc buildModule(blocks [Block], feiFileName [UInt8])
+    if < blocks.getLength() > 2
+        then errorNotExpectedToken(blocks[2].line[0], "")
+    tokenIndex := 1
+    block0 .= blocks[0]
+    moduleName .= block0.getString(tokenIndex)
+    block0.eol!(tokenIndex)
+    if < blocks.getLength() == 1
+        then errorNotExpectedToken(Token{file: block0.line[0].file, line: block0.line[0].line, value: "[Nothing]"}, "version")
+    tokenIndex = 0
+    version .= blocks[1].getVersion()
+    feiPath .= feiFileName.getPath()
+    sources .= feiPath.getSources()
+    modules .= feiPath.getModules()
+    printLn("Building...")
+    buildModulePackage(sources, modules, moduleName, version, feiFileName)
+    printLn("Done.")
+
+func getProgramPackageID() UInt64
+    attributes
+        alwaysInline
+    C
+        const uint8_t buffer[] = "pgFEIv0";
+        result_ = '0';
+        for (int index = 6; index != -1; index--){
+            result_ <<= 8;
+            result_ |= buffer[index];
+        }
+
+func getModulePackageID() UInt64
+    attributes
+        alwaysInline
+    C
+        const uint8_t buffer[] = "mdFEIv0";
+        result_ = '0';
+        for (int index = 6; index != -1; index--){
+            result_ <<= 8;
+            result_ |= buffer[index];
+        }
+
+func getSources(feiPath [UInt8]) [[UInt8]]
+    sourcesPath .= feiPath.add("src")
+    sourcesBox .= sourcesPath.getDirectoryItems()
+    if < sourcesBox.empty?()
+        then errorWrongDirectory(sourcesPath)
+    parse _, item <- sourcesBox[]
+        if !item.second && item.first.hasSuffix?(".cine")
+            then result += item.first
+    if < result.getLength() == 0
+        then errorSourcesNotExist()
+
+func getModules(feiPath [UInt8]) [[UInt8]]
+    modulesPath .= feiPath.add("modules")
+    modulesBox .= modulesPath.getDirectoryItems()
+    if modulesBox.item?()
+        then parse _, item <- modulesBox[]
+            if !item.second && item.first.hasSuffix?(".fpkg")
+                then result += item.first
+
+proc buildModulePackage(sources [[UInt8]], modules [[UInt8]], moduleName [UInt8], version [UInt8], feiFileName [UInt8])
+    blocks := [Block]
+    parse _, source <- sources
+        blocks += source.loadBlocks(true)
+    blocks:sort(builtInGetFunctionByID("block less function", @(Block, Block) -> Bool))
+    //Map(moduleName, (version, content))
+    alreadyIn := Map([UInt8], Pair([UInt8], [UInt8]))
+    alreadyIn:add(moduleName, Pair([UInt8], [UInt8]).create(version, blocks.toString()))
+    parse _, subModuleName <- modules
+        if subModuleBox .= subModuleName.loadFile(); > subModuleBox.item?()
+            then alreadyIn:loadModule(subModuleBox[], subModuleName)
+            else errorCantLoadFile(subModuleName)
+    package := BinaryData
+    package += getModulePackageID()
+    package += alreadyIn.getLength()
+    parse subModuleName, subModuleVersionAndContent <- alreadyIn
+        package += subModuleName
+        package += subModuleVersionAndContent.first
+        package += subModuleVersionAndContent.second
+    feiPath .= feiFileName.getPath()
+    packageFileName .= feiPath.join("pkgs/", moduleName, "-", version, ".fpkg")
+    _ = makeDirectory(feiPath + "pkgs", true)
+    _ = makeDirectory(feiPath + "modules", true)
+    if < !package.writeToFile(packageFileName)
+        then errorCantWriteToFile(packageFileName)
+
+func toCineFile(modules [[UInt8]], tmpDirectory [UInt8]) [UInt8]
+    //Map(moduleName, (version, content))
+    alreadyIn := Map([UInt8], Pair([UInt8], [UInt8]))
+    parse _, moduleFileName <- modules
+        if moduleBox .= moduleFileName.loadFile(); > moduleBox.item?()
+            then alreadyIn:loadModule(moduleBox[], moduleFileName)
+            else errorCantLoadFile(moduleFileName)
+    cineFile := ""
+    parse _, moduleVersionAndContent <- alreadyIn
+        cineFile += moduleVersionAndContent.second
+    result = tmpDirectory + "modules.cine"
+    makeFile(result, cineFile)
+
+proc loadModule(:alreadyInModules Map(/*name*/ [UInt8], Pair(/*version*/ [UInt8], /*content*/ [UInt8])), module BinaryData, moduleFileName [UInt8])
+    position := 0
+    if < UInt64.getFromBinaryData(module, position) != getModulePackageID()
+        then errorNotValidPackage(moduleFileName)
+    for remainLength := UInt64.getFromBinaryData(module, position); remainLength != 0; remainLength--
+        moduleName .= [UInt8].getFromBinaryData(module, position)
+        version .= [UInt8].getFromBinaryData(module, position)
+        moduleContent .= [UInt8].getFromBinaryData(module, position)
+        needToLoadModule := true
+        if alreadyInModuleBox .= alreadyInModules[moduleName]; alreadyInModuleBox.item?()
+            then needToLoadModule = version > alreadyInModuleBox[].first
+        if needToLoadModule
+            then
+                alreadyInModules:add(moduleName, Pair([UInt8], [UInt8]).create(version, moduleContent))

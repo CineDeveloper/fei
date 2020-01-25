@@ -1,10 +1,10 @@
-func loadBlocks(fileName [UInt8]) [Block]
+func loadBlocks(fileName [UInt8], includeCAndInclude Bool) [Block]
     file .= fileName.loadFile()
     if < file.empty?()
         then errorCantLoadFile(fileName)
     lines .= file[].convertTo([UInt8]).asString().split('\n')
     lineIndex := 0
     for
-        if block .= lines.getBlock(true, 0, fileName, lineIndex); block.item?()
+        if block .= lines.getBlock(true, 0, fileName, lineIndex, includeCAndInclude); block.item?()
             then result += block[]
             else break

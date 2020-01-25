@@ -1,9 +1,0 @@
-proc main()
-    actionAndData .= getActionAndData()
-    case actionAndData.action of
-        a_New
-            createNewProject(actionAndData.data)
-        a_Build
-            buildProject(actionAndData.data)
-        a_Install
-            installPackage(actionAndData.data)

@@ -99,3 +99,9 @@ func getToken(line [UInt8], file [UInt8], lineIndex UInt64, :rowIndex UInt64) Bo
         rowIndex++
     resultToken:value:setStringFlag()
     result:put(resultToken)
+
+proc level!(line [UInt8], expectedLevel  UInt64, file [UInt8], lineIndex  UInt64)
+    attributes
+        alwaysInline
+    if currentLevel .= line.getLevel(); < currentLevel != expectedLevel
+        then errorWrongLevel(file, lineIndex + 1, expectedLevel, currentLevel)

@@ -4,11 +4,6 @@ proc makeFile(fileName [UInt8], fileData [UInt8])
     if < !fileData.convertTo(BinaryData).writeToFile(fileName)
         then errorCantWriteToFile(fileName)
 
-func getCineModulePath() [UInt8]
-    attributes
-        alwaysInline
-    result = "/opt/cine/modules/"
-
 func getCineBinaryPath() [UInt8]
     attributes
         alwaysInline
@@ -34,16 +29,14 @@ func askTheUser(flagsFile BinaryData) [UInt8]
                         break
             print("Incorrect the variant number. Try again.\n")
 
-func saveToTmpFile(file [UInt8], executable [UInt8]) [UInt8]
+func saveToTmpFile(file [UInt8], programName [UInt8]) [UInt8]
     attributes
         noInline
-    result = "/tmp/".join(executable, ".c")
+    result = "/tmp/".join(programName, ".c")
     if < !file.convertTo(BinaryData).writeToFile(result)
         then errorCantWriteToFile(result)
 
-proc compileCFile(cFileName [UInt8], cCompilerOptions [UInt8], executable [UInt8])
+proc compileCFile(cFileName [UInt8], cCompilerOptions [UInt8], programName [UInt8])
     attributes
         noInline
-    executableFullName .= getCineBinaryPath() + executable
-    if < !systemExecute("clang ".join(cCompilerOptions, " ", cFileName, " -o ", executableFullName))
-        then errorExecutableNotExist(executableFullName)
+    panic(!systemExecute("clang ".join(cCompilerOptions, " ", cFileName, " -o ", getCineBinaryPath(), programName)), "")

@@ -6,47 +6,56 @@ func mainFile() [UInt8]
         "    print(\042Hello world!\\n\042)\n"
     }
 
-func releaseFeiFile(projectName [UInt8]) [UInt8]
+func releaseFeiProgramFile(programName [UInt8]) [UInt8]
     attributes
         alwaysInline
     result = {
-        "sources\n"
-        "    \042-standart\042\n"
-        "    \042./src/\042\n"
-        "    \042./main.cine\042\n\n"
+        "program \042".join(programName, "\042\n"
         "flags\n"
         "    debug = \042disable\042\n\n"
         "version = \0420.1\042\n\n"
-        "cCompilerOptions = \042-march=native -O2 -lm -w\042\n"
-        "executable = \042".join(
-        projectName,
-        "\042\n")
+        "cCompilerOptions = \042-march=native -O2 -lm -w\042\n")
     }
 
-func debugFeiFile(projectName [UInt8]) [UInt8]
+func debugFeiProgramFile(programName [UInt8]) [UInt8]
     attributes
         alwaysInline
     result = {
-        "sources\n"
-        "    \042-standart\042\n"
-        "    \042./src/\042\n"
-        "    \042./main.cine\042\n\n"
+        "program \042".join(programName, "-debug\042\n"
         "flags\n"
         "    debug = \042enable\042\n\n"
         "version = \0420.1\042\n\n"
-        "cCompilerOptions = \042-march=native -O1 -lm -Wall -Wpedantic -Wextra -Wno-visibility -Wno-missing-braces -Wno-gnu-compound-literal-initializer -Wno-unused-variable -Wno-unused-parameter -Wno-format-security -Wno-implicitly-unsigned-literal -Wno-unused-function\042\n"
-        "executable = \042".join(
-        projectName,
-        "-debug"
-        "\042\n")
+        "cCompilerOptions = \042-march=native -O1 -lm -Wall -Wpedantic -Wextra -Wno-visibility -Wno-missing-braces -Wno-gnu-compound-literal-initializer -Wno-unused-variable -Wno-unused-parameter -Wno-format-security -Wno-implicitly-unsigned-literal -Wno-unused-function\042\n")
     }
 
-proc createNewProject(data BinaryData)
-    projectName .= data.convertTo([UInt8])
+func releaseFeiModuleFile(moduleName [UInt8]) [UInt8]
+    attributes
+        alwaysInline
+    result = {
+        "module \042".join(moduleName, "\042\n",
+        "version = \0420.1\042\n\n")
+    }
+
+proc createNewProgram(data BinaryData)
+    programName .= data.convertTo([UInt8])
     if < !makeDirectory("./src", true)
         then errorCantMakeDirectory("./src")
     if < !makeDirectory("./pkgs", true)
         then errorCantMakeDirectory("./pkgs")
-    makeFile("./main.cine", mainFile())
-    makeFile("./release.fei", releaseFeiFile(projectName))
-    makeFile("./debug.fei", debugFeiFile(projectName))
+    if < !makeDirectory("./modules", true)
+        then errorCantMakeDirectory("./modules")
+    makeFile("./src/main.cine", mainFile())
+    makeFile("./release.fei", releaseFeiProgramFile(programName))
+    makeFile("./debug.fei", debugFeiProgramFile(programName))
+
+
+proc createNewModule(data BinaryData)
+    moduleName .= data.convertTo([UInt8])
+    if < !makeDirectory("./src", true)
+        then errorCantMakeDirectory("./src")
+    if < !makeDirectory("./pkgs", true)
+        then errorCantMakeDirectory("./pkgs")
+    if < !makeDirectory("./modules", true)
+        then errorCantMakeDirectory("./modules")
+    makeFile("./release.fei", releaseFeiModuleFile(moduleName))
+
