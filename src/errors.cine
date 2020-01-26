@@ -75,6 +75,11 @@ proc errorSourcesNotExist()
         noInline
     panic("No source files found.")
 
+proc errorEnvironmentVariableNotExist(name [UInt8])
+    attributes
+        noInline
+    panic("The environment variable \042".join(name, "\042 was not found."))
+
 proc errorCouldNotOpenDirectory(directory Token)
     attributes
         noInline

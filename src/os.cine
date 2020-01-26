@@ -7,7 +7,9 @@ proc makeFile(fileName [UInt8], fileData [UInt8])
 func getCineBinaryPath() [UInt8]
     attributes
         alwaysInline
-    result = "/usr/local/bin/"
+    if pathBox .= getEnvironmentVariable("FEI_BINARIES"); > pathBox.item?()
+        then result = pathBox[]+"/"
+        else errorEnvironmentVariableNotExist("FEI_BINARIES")
 
 func askTheUser(flagsFile BinaryData) [UInt8]
     attributes
