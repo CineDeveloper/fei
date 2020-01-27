@@ -70,11 +70,6 @@ proc errorWrongName(name Token, nameOwner [UInt8])
         noInline
     panic(name.coordinatesToString().join("Wrong ", nameOwner, " name. (", name[], ")"))
 
-proc errorSourcesNotExist()
-    attributes
-        noInline
-    panic("No source files found.")
-
 proc errorEnvironmentVariableNotExist(name [UInt8])
     attributes
         noInline
@@ -109,3 +104,13 @@ proc errorNotValidPackage(packageFileName [UInt8])
     attributes
         noInline
     panic("File \042".join(packageFileName, "\042 is not a 'fpkg' package."))
+
+proc errorDeleteDirectory(directoryName [UInt8])
+    attributes
+        noInline
+    panic("It is not possible to delete the \042".join(directoryName, "\042 directory."))
+
+proc errorTwoResourcesOneName(resourceName [UInt8])
+    attributes
+        noInline
+    panic("The resource named \042".join(resourceName, "\042 has two different options."))

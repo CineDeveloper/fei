@@ -1,0 +1,46 @@
+type Module
+    name, version, code [UInt8]
+    resources [Resource]
+
+rules
+    1 = type == Module
+    join 1 Binary
+
+proc addEq(:data BinaryData, module Module)
+    attributes
+        alwaysInline
+    data += module.name
+    data += module.version
+    data += module.code
+    data += module.resources
+
+func getFromBinaryData(resourceType Module, data BinaryData, :position UInt64) resourceType
+    attributes
+        alwaysInline
+    result:name = [UInt8].getFromBinaryData(data, position)
+    result:version = [UInt8].getFromBinaryData(data, position)
+    result:code = [UInt8].getFromBinaryData(data, position)
+    result:resources = [Resource].getFromBinaryData(data, position)
+
+func unique(modules [Module]) [Module]
+    modulesMap := Map([UInt8], Module)
+    parse _, module <- modules
+        needToLoadModule := true
+        if existedModuleBox .= modulesMap[module.name]; existedModuleBox.item?()
+            then needToLoadModule = module.version > existedModuleBox[].version
+        if needToLoadModule
+            then modulesMap:add(module.name, module)
+    modulesLength .= modulesMap.getLength()
+    result = [Module].init(modulesLength)
+    index := 0
+    parse _, module <- modulesMap
+        result:setItem(index, module)
+        index++
+
+func getOneCineFile(modules [Module]) [UInt8]
+    parse _, module <- modules
+        result:join("//", module.name, "-", module.version, "\n", module.code, "\n")
+
+func getResources(modules [Module]) [Resource]
+    parse _, module <- modules
+        result += module.resources

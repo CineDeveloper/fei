@@ -4,12 +4,26 @@ proc makeFile(fileName [UInt8], fileData [UInt8])
     if < !fileData.convertTo(BinaryData).writeToFile(fileName)
         then errorCantWriteToFile(fileName)
 
-func getCineBinaryPath() [UInt8]
+func getFeiBinariesPath() [UInt8]
     attributes
         alwaysInline
     if pathBox .= getEnvironmentVariable("FEI_BINARIES"); > pathBox.item?()
-        then result = pathBox[]+"/"
+        then result = pathBox[] + select(pathBox[].hasSuffix?("/"), "", "/")
         else errorEnvironmentVariableNotExist("FEI_BINARIES")
+
+func getFeiResourcesPath() [UInt8]
+    attributes
+        alwaysInline
+    if pathBox .= getEnvironmentVariable("FEI_RESOURCES"); > pathBox.item?()
+        then result = pathBox[] + select(pathBox[].hasSuffix?("/"), "", "/")
+        else errorEnvironmentVariableNotExist("FEI_RESOURCES")
+
+func getFeiConfigsPath() [UInt8]
+    attributes
+        alwaysInline
+    if pathBox .= getEnvironmentVariable("FEI_CONFIGS"); > pathBox.item?()
+        then result = pathBox[] + select(pathBox[].hasSuffix?("/"), "", "/")
+        else errorEnvironmentVariableNotExist("FEI_CONFIGS")
 
 func askTheUser(flagsFile BinaryData) [UInt8]
     attributes
@@ -31,14 +45,25 @@ func askTheUser(flagsFile BinaryData) [UInt8]
                         break
             print("Incorrect the variant number. Try again.\n")
 
-func saveToTmpFile(file [UInt8], programName [UInt8]) [UInt8]
+func saveToTmpFile(fileData [UInt8], fileName [UInt8]) [UInt8]
     attributes
         noInline
-    result = "/tmp/".join(programName, ".c")
-    if < !file.convertTo(BinaryData).writeToFile(result)
+    result = "/tmp/" + fileName
+    if < !fileData.convertTo(BinaryData).writeToFile(result)
         then errorCantWriteToFile(result)
 
 proc compileCFile(cFileName [UInt8], cCompilerOptions [UInt8], programName [UInt8])
     attributes
         noInline
-    panic(!systemExecute("clang ".join(cCompilerOptions, " ", cFileName, " -o ", getCineBinaryPath(), programName)), "")
+    panic(!systemExecute("clang ".join(cCompilerOptions, " ", cFileName, " -o ", getFeiBinariesPath(), programName)), "")
+
+func loadBlocks(fileName [UInt8], includeCAndInclude Bool) [Block]
+    file .= fileName.loadFile()
+    if < file.empty?()
+        then errorCantLoadFile(fileName)
+    lines .= file[].convertTo([UInt8]).asString().split('\n')
+    lineIndex := 0
+    for
+        if block .= lines.getBlock(true, 0, fileName, lineIndex, includeCAndInclude); block.item?()
+            then result += block[]
+            else break

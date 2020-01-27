@@ -50,6 +50,7 @@ proc eol!(block Block, tokenIndex UInt64)
 func getVersion(block Block) [UInt8]
     attributes
         alwaysInline
+    block.noSubBlocks!()
     tokenIndex := 0
     block.next!(tokenIndex, "version")
     block.next!(tokenIndex, "=")
@@ -59,6 +60,7 @@ func getVersion(block Block) [UInt8]
 func getCCompilerOptions(block Block) [UInt8]
     attributes
         alwaysInline
+    block.noSubBlocks!()
     tokenIndex := 1
     block.next!(tokenIndex, "=")
     result = block.getString(tokenIndex)

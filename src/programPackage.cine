@@ -1,0 +1,42 @@
+type ProgramPackage
+    name, version, cCode [UInt8]
+    flagsFile BinaryData
+    cCompilerOptions [UInt8]
+    resources [Resource]
+
+func load(packageType ProgramPackage, fileName [UInt8]) packageType
+    packageBox .= loadFile(fileName)
+    if < packageBox.empty?()
+        then errorCantLoadFile(fileName)
+    package .= packageBox[]
+    position := 0
+    if < UInt64.getFromBinaryData(package, position) != getProgramPackageID()
+        then errorNotValidPackage(fileName)
+    result:name = [UInt8].getFromBinaryData(package, position)
+    result:version = [UInt8].getFromBinaryData(package, position)
+    result:cCode = [UInt8].getFromBinaryData(package, position)
+    result:flagsFile = [UInt8].getFromBinaryData(package, position).convertTo(BinaryData)
+    result:cCompilerOptions = [UInt8].getFromBinaryData(package, position)
+    result:resources = [Resource].getFromBinaryData(package, position)
+
+proc save(package ProgramPackage, fileName [UInt8])
+    data := BinaryData
+    data += getProgramPackageID()
+    data += package.name
+    data += package.version
+    data += package.cCode
+    data += package.flagsFile.convertTo([UInt8])
+    data += package.cCompilerOptions
+    data += package.resources
+    makeFile(fileName, data.convertTo([UInt8]))
+
+func getProgramPackageID() UInt64
+    attributes
+        alwaysInline
+    C
+        const uint8_t buffer[] = "pgFEIv0";
+        result_ = '0';
+        for (int index = 6; index != -1; index--){
+            result_ <<= 8;
+            result_ |= buffer[index];
+        }

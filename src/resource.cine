@@ -1,0 +1,28 @@
+type Resource
+    name [UInt8]
+    data Box([UInt8])
+
+rules
+    1 = type == Resource
+    join 1 Binary
+
+proc addEq(:data BinaryData, resource Resource)
+    attributes
+        alwaysInline
+    data += resource.name
+    data += resource.data
+
+func getFromBinaryData(resourceType Resource, data BinaryData, :position UInt64) resourceType
+    attributes
+        alwaysInline
+    result:name = [UInt8].getFromBinaryData(data, position)
+    result:data = Box([UInt8]).getFromBinaryData(data, position)
+
+proc unique!(resources [Resource])
+    dataMap := Map([UInt8], [UInt8])
+    parse _, resource <- resources
+        if resource.data.item?()
+            then if existedDataBox .= dataMap[resource.name]; existedDataBox.empty?()
+                then dataMap:add(resource.name, resource.data[])
+                else if < resource.data[] != existedDataBox[]
+                    then errorTwoResourcesOneName(resource.name)

@@ -36,26 +36,22 @@ func releaseFeiModuleFile(moduleName [UInt8]) [UInt8]
         "version = \0420.1\042\n\n")
     }
 
+proc createProject()
+    parse _, directoryName <- [[UInt8]]{"./src", "./pkgs", "./modules", "./resources"}
+        if < !makeDirectory(directoryName, true)
+            then errorCantMakeDirectory(directoryName)
+    if standartModule .= getResource("standart-0.1.fpkg"); > standartModule.item?()
+        then makeFile("./modules/standart-0.1.fpkg", standartModule[].convertTo([UInt8]))
+        else panic("There is no standard module in resources.")
+
 proc createNewProgram(data BinaryData)
+    createProject()
     programName .= data.convertTo([UInt8])
-    if < !makeDirectory("./src", true)
-        then errorCantMakeDirectory("./src")
-    if < !makeDirectory("./pkgs", true)
-        then errorCantMakeDirectory("./pkgs")
-    if < !makeDirectory("./modules", true)
-        then errorCantMakeDirectory("./modules")
     makeFile("./src/main.cine", mainFile())
     makeFile("./release.fei", releaseFeiProgramFile(programName))
     makeFile("./debug.fei", debugFeiProgramFile(programName))
 
-
 proc createNewModule(data BinaryData)
+    createProject()
     moduleName .= data.convertTo([UInt8])
-    if < !makeDirectory("./src", true)
-        then errorCantMakeDirectory("./src")
-    if < !makeDirectory("./pkgs", true)
-        then errorCantMakeDirectory("./pkgs")
-    if < !makeDirectory("./modules", true)
-        then errorCantMakeDirectory("./modules")
     makeFile("./release.fei", releaseFeiModuleFile(moduleName))
-
